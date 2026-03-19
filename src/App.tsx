@@ -273,7 +273,6 @@ export default function HomeFixPage() {
   } catch (error) {
     alert(error.message);
   }
-};
   };
 
   const scrollToSection = (id) => {
