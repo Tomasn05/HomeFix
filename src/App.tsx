@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { auth } from './firebase';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
+
 const BASE_SERVICES = [
   {
     name: 'Plomería',
@@ -129,6 +130,8 @@ export default function HomeFixPage() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authRole, setAuthRole] = useState('cliente');
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
+  const [currentUser, setCurrentUser] = useState(null);
+  const [profileForm, setProfileForm] = useState({ name: '', email: '', photoUrl: '' });
   const [creatorProfile, setCreatorProfile] = useState({
     name: 'Tomás Notti',
     role: 'Creador de HomeFix',
@@ -242,37 +245,66 @@ export default function HomeFixPage() {
     setAuthForm({ name: '', email: '', password: '', confirmPassword: '' });
   };
 
- const handleAuthSubmit = async (e) => {
-  e.preventDefault();
-
-  try {
-    if (authMode === 'register') {
-      if (authForm.password !== authForm.confirmPassword) {
-        alert('Las contraseñas no coinciden');
-        return;
-      }
-
-      await createUserWithEmailAndPassword(
-        auth,
-        authForm.email,
-        authForm.password
-      );
-
-      alert('Cuenta creada con éxito');
-      closeAuthModal();
-    } else {
-      await signInWithEmailAndPassword(
-        auth,
-        authForm.email,
-        authForm.password
-      );
-
-      alert('Ingreso exitoso');
-      closeAuthModal();
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      alert('Sesión cerrada');
+    } catch (error) {
+      alert(error.message);
     }
-  } catch (error) {
-    alert(error.message);
-  }
+  };
+
+  const handleProfileSave = async () => {
+    if (!auth.currentUser) return;
+    try {
+      await updateProfile(auth.currentUser, {
+        displayName: profileForm.name,
+        photoURL: profileForm.photoUrl,
+      });
+      setCurrentUser({ ...auth.currentUser, displayName: profileForm.name, photoURL: profileForm.photoUrl });
+      alert('Perfil actualizado');
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      if (authMode === 'register') {
+        if (authForm.password !== authForm.confirmPassword) {
+          alert('Las contraseñas no coinciden');
+          return;
+        }
+
+        const result = await createUserWithEmailAndPassword(
+          auth,
+          authForm.email,
+          authForm.password
+        );
+
+        if (authForm.name.trim()) {
+          await updateProfile(result.user, {
+            displayName: authForm.name,
+          });
+        }
+
+        alert('Cuenta creada con éxito');
+        closeAuthModal();
+      } else {
+        await signInWithEmailAndPassword(
+          auth,
+          authForm.email,
+          authForm.password
+        );
+
+        alert('Ingreso exitoso');
+        closeAuthModal();
+      }
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   const scrollToSection = (id) => {
@@ -363,6 +395,23 @@ export default function HomeFixPage() {
     localStorage.setItem('fixnow_workers', JSON.stringify(addedWorkers));
   }, [addedWorkers]);
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      if (user) {
+        setProfileForm({
+          name: user.displayName || '',
+          email: user.email || '',
+          photoUrl: user.photoURL || '',
+        });
+      } else {
+        setProfileForm({ name: '', email: '', photoUrl: '' });
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const addWorker = () => {
     const phoneDigits = String(newWorker.contact || '').replace(/[^0-9]/g, '');
     if (!newWorker.name.trim() || !newWorker.role.trim()) return;
@@ -441,8 +490,14 @@ export default function HomeFixPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button onClick={() => openAuthModal('login')} className="text-sm font-semibold">Ingresar</button>
-            <button onClick={() => openAuthModal('register')} className="rounded-xl border border-black px-3 py-2 text-sm font-semibold">Registrarme</button>
+            {currentUser ? (
+              <button onClick={handleLogout} className="rounded-xl border border-black px-3 py-2 text-sm font-semibold">Cerrar sesión</button>
+            ) : (
+              <>
+                <button onClick={() => openAuthModal('login')} className="text-sm font-semibold">Ingresar</button>
+                <button onClick={() => openAuthModal('register')} className="rounded-xl border border-black px-3 py-2 text-sm font-semibold">Registrarme</button>
+              </>
+            )}
             <div className="relative">
               <button
                 onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -519,6 +574,74 @@ export default function HomeFixPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {currentUser && (
+          <section className="mx-auto max-w-7xl px-6 pt-10">
+            <div className="rounded-[2rem] border border-black bg-zinc-50 p-8 md:p-10">
+              <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-start gap-5">
+                  {profileForm.photoUrl ? (
+                    <img src={profileForm.photoUrl} alt={profileForm.name || 'Perfil'} className="h-20 w-20 rounded-3xl border border-black object-cover" />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-black text-3xl font-black text-white">{initials(profileForm.name || currentUser.email || 'U')}</div>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Mi perfil</p>
+                    <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{profileForm.name || 'Usuario HomeFix'}</h3>
+                    <p className="mt-2 text-lg text-black/70">{profileForm.email}</p>
+                    <div className="mt-4 flex flex-wrap gap-3 text-sm">
+                      <span className="rounded-full border border-black px-4 py-2">⭐ {Object.values(tempReviews).flat().length > 0 ? (Object.values(tempReviews).flat().reduce((sum, r) => sum + r.stars, 0) / Object.values(tempReviews).flat().length).toFixed(1) : 'Sin puntaje'}</span>
+                      <span className="rounded-full border border-black px-4 py-2">📝 {Object.values(tempReviews).flat().length} reseñas hechas</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
+                    <h4 className="text-xl font-bold">Editar datos</h4>
+                    <div className="mt-4 grid gap-3">
+                      <input value={profileForm.name} onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} placeholder="Nombre y apellido" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
+                      <input value={profileForm.email} disabled className="w-full rounded-2xl border border-black/15 bg-zinc-100 px-4 py-3 outline-none" />
+                      <input value={profileForm.photoUrl} onChange={(e) => setProfileForm({ ...profileForm, photoUrl: e.target.value })} placeholder="URL de foto de perfil" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onloadend = () => setProfileForm((prev) => ({ ...prev, photoUrl: reader.result }));
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                      <button onClick={handleProfileSave} className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">Guardar cambios</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
+                    <h4 className="text-xl font-bold">Mis reseñas y puntajes</h4>
+                    <div className="mt-4 space-y-3">
+                      {Object.values(tempReviews).flat().length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/60">Todavía no hiciste reseñas.</div>
+                      ) : (
+                        Object.values(tempReviews).flat().map((r) => (
+                          <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
+                            {'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         )}
 
         {selectedProfessional && (
@@ -948,4 +1071,3 @@ export default function HomeFixPage() {
     </div>
   );
 }
-
