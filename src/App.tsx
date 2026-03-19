@@ -947,4 +947,5 @@ export default function HomeFixPage() {
       </footer>
     </div>
   );
+}
 
