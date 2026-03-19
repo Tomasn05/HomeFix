@@ -242,9 +242,38 @@ export default function HomeFixPage() {
     setAuthForm({ name: '', email: '', password: '', confirmPassword: '' });
   };
 
-  const handleAuthSubmit = (e) => {
-    e.preventDefault();
-    alert('Pantalla lista para conectar con Firebase Auth.');
+ const handleAuthSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    if (authMode === 'register') {
+      if (authForm.password !== authForm.confirmPassword) {
+        alert('Las contraseñas no coinciden');
+        return;
+      }
+
+      await createUserWithEmailAndPassword(
+        auth,
+        authForm.email,
+        authForm.password
+      );
+
+      alert('Cuenta creada con éxito');
+      closeAuthModal();
+    } else {
+      await signInWithEmailAndPassword(
+        auth,
+        authForm.email,
+        authForm.password
+      );
+
+      alert('Ingreso exitoso');
+      closeAuthModal();
+    }
+  } catch (error) {
+    alert(error.message);
+  }
+};
   };
 
   const scrollToSection = (id) => {
