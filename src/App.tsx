@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-
+import { auth } from './firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 const BASE_SERVICES = [
   {
     name: 'Plomería',
