@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { auth } from './firebase';
 import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
 
@@ -132,6 +132,8 @@ export default function HomeFixPage() {
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
   const [currentUser, setCurrentUser] = useState(null);
   const [profileForm, setProfileForm] = useState({ name: '', email: '', photoUrl: '' });
+  const profileRef = useRef(null);
+
   const [creatorProfile, setCreatorProfile] = useState({
     name: 'Tomás Notti',
     role: 'Creador de HomeFix',
@@ -140,9 +142,17 @@ export default function HomeFixPage() {
     city: 'Mendoza',
     bio: 'Estoy construyendo HomeFix para conectar clientes con profesionales confiables de forma simple y rápida.',
   });
+
   const [newWorker, setNewWorker] = useState({
-    name: '', role: 'Plomería', area: 'Capital', contact: '', email: '', photoUrl: '', about: '',
+    name: '',
+    role: 'Plomería',
+    area: 'Capital',
+    contact: '',
+    email: '',
+    photoUrl: '',
+    about: '',
   });
+
   const [addedWorkers, setAddedWorkers] = useState(() => {
     if (typeof window === 'undefined') return [];
     try {
@@ -153,6 +163,7 @@ export default function HomeFixPage() {
       return [];
     }
   });
+
   const [showAdminInput, setShowAdminInput] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminClickCount, setAdminClickCount] = useState(0);
@@ -243,6 +254,11 @@ export default function HomeFixPage() {
   const closeAuthModal = () => {
     setIsAuthOpen(false);
     setAuthForm({ name: '', email: '', password: '', confirmPassword: '' });
+  };
+
+  const scrollToProfile = () => {
+    profileRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setIsMenuOpen(false);
   };
 
   const handleLogout = async () => {
@@ -491,7 +507,10 @@ export default function HomeFixPage() {
 
           <div className="flex items-center gap-3">
             {currentUser ? (
-              <button onClick={handleLogout} className="rounded-xl border border-black px-3 py-2 text-sm font-semibold">Cerrar sesión</button>
+              <>
+                <button onClick={scrollToProfile} className="text-sm font-semibold">Mi perfil</button>
+                <button onClick={handleLogout} className="rounded-xl border border-black px-3 py-2 text-sm font-semibold">Cerrar sesión</button>
+              </>
             ) : (
               <>
                 <button onClick={() => openAuthModal('login')} className="text-sm font-semibold">Ingresar</button>
@@ -520,6 +539,9 @@ export default function HomeFixPage() {
                       <button onClick={() => scrollToSection('servicios')} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">Servicios</button>
                       <button onClick={() => scrollToSection('como-funciona')} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">Cómo funciona</button>
                       <button onClick={() => scrollToSection('profesionales')} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">Profesionales</button>
+                      {currentUser && (
+                        <button onClick={scrollToProfile} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">Mi perfil</button>
+                      )}
                     </div>
                   </div>
                 </>
@@ -574,74 +596,6 @@ export default function HomeFixPage() {
               </div>
             </div>
           </div>
-        )}
-
-        {currentUser && (
-          <section className="mx-auto max-w-7xl px-6 pt-10">
-            <div className="rounded-[2rem] border border-black bg-zinc-50 p-8 md:p-10">
-              <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="flex items-start gap-5">
-                  {profileForm.photoUrl ? (
-                    <img src={profileForm.photoUrl} alt={profileForm.name || 'Perfil'} className="h-20 w-20 rounded-3xl border border-black object-cover" />
-                  ) : (
-                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-black text-3xl font-black text-white">{initials(profileForm.name || currentUser.email || 'U')}</div>
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Mi perfil</p>
-                    <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{profileForm.name || 'Usuario HomeFix'}</h3>
-                    <p className="mt-2 text-lg text-black/70">{profileForm.email}</p>
-                    <div className="mt-4 flex flex-wrap gap-3 text-sm">
-                      <span className="rounded-full border border-black px-4 py-2">⭐ {Object.values(tempReviews).flat().length > 0 ? (Object.values(tempReviews).flat().reduce((sum, r) => sum + r.stars, 0) / Object.values(tempReviews).flat().length).toFixed(1) : 'Sin puntaje'}</span>
-                      <span className="rounded-full border border-black px-4 py-2">📝 {Object.values(tempReviews).flat().length} reseñas hechas</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="space-y-6">
-                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
-                    <h4 className="text-xl font-bold">Editar datos</h4>
-                    <div className="mt-4 grid gap-3">
-                      <input value={profileForm.name} onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} placeholder="Nombre y apellido" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
-                      <input value={profileForm.email} disabled className="w-full rounded-2xl border border-black/15 bg-zinc-100 px-4 py-3 outline-none" />
-                      <input value={profileForm.photoUrl} onChange={(e) => setProfileForm({ ...profileForm, photoUrl: e.target.value })} placeholder="URL de foto de perfil" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
-                          const reader = new FileReader();
-                          reader.onloadend = () => setProfileForm((prev) => ({ ...prev, photoUrl: reader.result }));
-                          reader.readAsDataURL(file);
-                        }}
-                      />
-                      <button onClick={handleProfileSave} className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">Guardar cambios</button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
-                    <h4 className="text-xl font-bold">Mis reseñas y puntajes</h4>
-                    <div className="mt-4 space-y-3">
-                      {Object.values(tempReviews).flat().length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/60">Todavía no hiciste reseñas.</div>
-                      ) : (
-                        Object.values(tempReviews).flat().map((r) => (
-                          <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
-                            {'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
         )}
 
         {selectedProfessional && (
@@ -882,6 +836,100 @@ export default function HomeFixPage() {
             <button onClick={() => openWhatsApp(creatorProfile.phone, 'Hola Tomi, quiero ofrecer mis servicios en HomeFix.')} className="whitespace-nowrap rounded-2xl bg-black px-6 py-4 font-semibold text-white shadow-lg">Quiero ofrecer mis servicios</button>
           </div>
         </section>
+
+        {currentUser && (
+          <section ref={profileRef} className="mx-auto max-w-7xl px-6 pb-20 pt-10">
+            <div className="rounded-[2rem] border border-black bg-zinc-50 p-8 md:p-10">
+              <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-start gap-5">
+                  {profileForm.photoUrl ? (
+                    <img src={profileForm.photoUrl} alt={profileForm.name || 'Perfil'} className="h-20 w-20 rounded-3xl border border-black object-cover" />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-black text-3xl font-black text-white">
+                      {initials(profileForm.name || currentUser.email || 'U')}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Mi perfil</p>
+                    <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{profileForm.name || 'Usuario HomeFix'}</h3>
+                    <p className="mt-2 text-lg text-black/70">{profileForm.email}</p>
+                    <div className="mt-4 flex flex-wrap gap-3 text-sm">
+                      <span className="rounded-full border border-black px-4 py-2">
+                        ⭐ {Object.values(tempReviews).flat().length > 0
+                          ? (Object.values(tempReviews).flat().reduce((sum, r) => sum + r.stars, 0) / Object.values(tempReviews).flat().length).toFixed(1)
+                          : 'Sin puntaje'}
+                      </span>
+                      <span className="rounded-full border border-black px-4 py-2">
+                        📝 {Object.values(tempReviews).flat().length} reseñas hechas
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
+                    <h4 className="text-xl font-bold">Editar datos</h4>
+                    <div className="mt-4 grid gap-3">
+                      <input
+                        value={profileForm.name}
+                        onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                        placeholder="Nombre y apellido"
+                        className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black"
+                      />
+                      <input
+                        value={profileForm.email}
+                        disabled
+                        className="w-full rounded-2xl border border-black/15 bg-zinc-100 px-4 py-3 outline-none"
+                      />
+                      <input
+                        value={profileForm.photoUrl}
+                        onChange={(e) => setProfileForm({ ...profileForm, photoUrl: e.target.value })}
+                        placeholder="URL de foto de perfil"
+                        className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black"
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onloadend = () => setProfileForm((prev) => ({ ...prev, photoUrl: reader.result }));
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                      <button onClick={handleProfileSave} className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">
+                        Guardar cambios
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
+                    <h4 className="text-xl font-bold">Mis reseñas y puntajes</h4>
+                    <div className="mt-4 space-y-3">
+                      {Object.values(tempReviews).flat().length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/60">
+                          Todavía no hiciste reseñas.
+                        </div>
+                      ) : (
+                        Object.values(tempReviews).flat().map((r) => (
+                          <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
+                            {'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {isCreatorMode && (
           <section data-creator-panel className="mx-auto max-w-7xl px-6 py-8">
