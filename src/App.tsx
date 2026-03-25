@@ -8,7 +8,7 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import { addDoc, collection, doc, getDocs, setDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 
 const BASE_SERVICES = [
   {
@@ -126,6 +126,10 @@ function safeUuid() {
   return `worker-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function buildWorkerId(pro) {
+  return pro.id || `${pro.name}-${String(pro.contact || '').replace(/[^0-9]/g, '')}`;
+}
+
 export default function HomeFixPage() {
   const [selectedService, setSelectedService] = useState('Gas');
   const [selectedProfessional, setSelectedProfessional] = useState(null);
@@ -162,6 +166,8 @@ export default function HomeFixPage() {
   });
 
   const [addedWorkers, setAddedWorkers] = useState([]);
+  const [savedReviews, setSavedReviews] = useState([]);
+  const [myReviews, setMyReviews] = useState([]);
   const [showAdminInput, setShowAdminInput] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminClickCount, setAdminClickCount] = useState(0);
@@ -387,35 +393,83 @@ export default function HomeFixPage() {
     return clonedWorker.id;
   };
 
-  const addReview = (pro) => {
-    if (!reviewStars) return;
-    const entry = { id: safeUuid(), stars: reviewStars, text: reviewText || '' };
-    const idx = findWorkerIndex(pro);
-    if (idx !== -1) {
-      setAddedWorkers((prev) => prev.map((w, i) => {
-        if (i !== idx) return w;
-        const list = w.reviewEntries || [];
-        const nextList = [...list, entry];
-        const nextCount = nextList.length;
-        const nextRating = (nextList.reduce((sum, item) => sum + item.stars, 0) / nextCount).toFixed(1);
-        return { ...w, reviewEntries: nextList, reviews: nextCount, rating: nextRating };
+  const loadReviewsForWorker = async (pro) => {
+    try {
+      const workerId = buildWorkerId(pro);
+      const q = query(collection(db, 'reviews'), where('workerId', '==', workerId));
+      const snapshot = await getDocs(q);
+      const reviews = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
       }));
-    } else {
-      setTempReviews((prev) => ({ ...prev, [pro.contact]: [...(prev[pro.contact] || []), entry] }));
+      setSavedReviews(reviews);
+    } catch (error) {
+      console.error('Error cargando reseñas del trabajador:', error);
     }
-    setReviewStars(5);
-    setReviewText('');
-    setReviewFilter('all');
+  };
+
+  const loadMyReviews = async (userArg = currentUser) => {
+    if (!userArg) return;
+    try {
+      const q = query(collection(db, 'reviews'), where('userId', '==', userArg.uid));
+      const snapshot = await getDocs(q);
+      const reviews = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
+      }));
+      setMyReviews(reviews);
+    } catch (error) {
+      console.error('Error cargando mis reseñas:', error);
+    }
+  };
+
+  const addReview = async (pro) => {
+    if (!reviewStars) return;
+
+    if (!currentUser) {
+      alert('Tenés que iniciar sesión para dejar una reseña.');
+      return;
+    }
+
+    try {
+      const reviewData = {
+        workerId: buildWorkerId(pro),
+        workerName: pro.name || '',
+        userId: currentUser.uid,
+        userEmail: currentUser.email || '',
+        userName: currentUser.displayName || 'Usuario',
+        stars: reviewStars,
+        text: reviewText || '',
+        createdAt: new Date().toISOString(),
+      };
+
+      await addDoc(collection(db, 'reviews'), reviewData);
+
+      setReviewStars(5);
+      setReviewText('');
+      setReviewFilter('all');
+
+      await loadReviewsForWorker(pro);
+      await loadMyReviews();
+
+      alert('Reseña guardada correctamente');
+    } catch (error) {
+      console.error(error);
+      alert('Error guardando la reseña');
+    }
   };
 
   const getReviewsForProfessional = (pro) => {
-    const idx = findWorkerIndex(pro);
-    const dynamicReviews = idx !== -1 ? addedWorkers[idx]?.reviewEntries || [] : tempReviews[pro.contact] || [];
-    const baseReviews = [
-      { id: 'seed-1', stars: 5, text: 'Muy buen servicio.' },
-      { id: 'seed-2', stars: 4, text: 'Llegó puntual y resolvió rápido.' },
-    ];
-    const list = dynamicReviews.length > 0 ? dynamicReviews : baseReviews;
+    const workerId = buildWorkerId(pro);
+    const list = savedReviews.filter((r) => r.workerId === workerId);
+
+    if (list.length === 0) {
+      return [
+        { id: 'seed-1', stars: 5, text: 'Muy buen servicio.' },
+        { id: 'seed-2', stars: 4, text: 'Llegó puntual y resolvió rápido.' },
+      ];
+    }
+
     if (reviewFilter === 'highest') return [...list].sort((a, b) => b.stars - a.stars);
     if (reviewFilter === 'lowest') return [...list].sort((a, b) => a.stars - b.stars);
     return list;
@@ -454,6 +508,14 @@ export default function HomeFixPage() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (currentUser) {
+      loadMyReviews(currentUser);
+    } else {
+      setMyReviews([]);
+    }
+  }, [currentUser]);
 
   const addWorker = async () => {
     const phoneDigits = String(newWorker.contact || '').replace(/[^0-9]/g, '');
@@ -604,6 +666,7 @@ export default function HomeFixPage() {
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/45">{authMode === 'login' ? 'Ingreso' : 'Registro'}</p>
                   <h3 className="mt-2 text-3xl font-black tracking-tight">{authMode === 'login' ? 'Entrá a HomeFix' : 'Creá tu cuenta'}</h3>
+                  <p className="mt-2 text-sm text-black/65">Esta pantalla ya está lista para conectarla con Firebase Auth.</p>
                 </div>
                 <button onClick={closeAuthModal} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">✕</button>
               </div>
@@ -635,9 +698,9 @@ export default function HomeFixPage() {
                 <button type="submit" className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">{authMode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
               </form>
 
-              <p className="mt-4 text-center text-sm text-black/55">
-  Verificá tu email para activar tu cuenta.
-</p>
+              <div className="mt-4 rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/65">
+                Usuarios guardados en Firestore y verificación de email activada.
+              </div>
             </div>
           </div>
         )}
@@ -862,7 +925,16 @@ export default function HomeFixPage() {
 
                   <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <button onClick={() => openWhatsApp(pro.contact, getSmartMessage(pro, selectedService))} className="rounded-2xl bg-black px-4 py-3 text-center font-semibold text-white">Contactar por WhatsApp</button>
-                    <button onClick={() => { setSelectedProfessional(pro); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50); }} className="rounded-2xl border border-black px-4 py-3 font-semibold">Ver perfil</button>
+                    <button
+                      onClick={async () => {
+                        setSelectedProfessional(pro);
+                        await loadReviewsForWorker(pro);
+                        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+                      }}
+                      className="rounded-2xl border border-black px-4 py-3 font-semibold"
+                    >
+                      Ver perfil
+                    </button>
                   </div>
                 </div>
               );
@@ -899,12 +971,12 @@ export default function HomeFixPage() {
                     <p className="mt-2 text-lg text-black/70">{profileForm.email}</p>
                     <div className="mt-4 flex flex-wrap gap-3 text-sm">
                       <span className="rounded-full border border-black px-4 py-2">
-                        ⭐ {Object.values(tempReviews).flat().length > 0
-                          ? (Object.values(tempReviews).flat().reduce((sum, r) => sum + r.stars, 0) / Object.values(tempReviews).flat().length).toFixed(1)
+                        ⭐ {myReviews.length > 0
+                          ? (myReviews.reduce((sum, r) => sum + r.stars, 0) / myReviews.length).toFixed(1)
                           : 'Sin puntaje'}
                       </span>
                       <span className="rounded-full border border-black px-4 py-2">
-                        📝 {Object.values(tempReviews).flat().length} reseñas hechas
+                        📝 {myReviews.length} reseñas hechas
                       </span>
                     </div>
                   </div>
@@ -956,14 +1028,15 @@ export default function HomeFixPage() {
                   <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
                     <h4 className="text-xl font-bold">Mis reseñas y puntajes</h4>
                     <div className="mt-4 space-y-3">
-                      {Object.values(tempReviews).flat().length === 0 ? (
+                      {myReviews.length === 0 ? (
                         <div className="rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/60">
                           Todavía no hiciste reseñas.
                         </div>
                       ) : (
-                        Object.values(tempReviews).flat().map((r) => (
+                        myReviews.map((r) => (
                           <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
-                            {'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
+                            <p className="font-semibold">Para: {r.workerName}</p>
+                            <p>{'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}</p>
                           </div>
                         ))
                       )}
