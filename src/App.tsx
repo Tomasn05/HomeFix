@@ -604,7 +604,6 @@ export default function HomeFixPage() {
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/45">{authMode === 'login' ? 'Ingreso' : 'Registro'}</p>
                   <h3 className="mt-2 text-3xl font-black tracking-tight">{authMode === 'login' ? 'Entrá a HomeFix' : 'Creá tu cuenta'}</h3>
-                  <p className="mt-2 text-sm text-black/65">Esta pantalla ya está lista para conectarla con Firebase Auth.</p>
                 </div>
                 <button onClick={closeAuthModal} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">✕</button>
               </div>
