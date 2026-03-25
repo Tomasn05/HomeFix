@@ -168,10 +168,6 @@ export default function HomeFixPage() {
   const [addedWorkers, setAddedWorkers] = useState([]);
   const [savedReviews, setSavedReviews] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
-  const [allReviews, setAllReviews] = useState([]);
-  const [isAuthSubmitting, setIsAuthSubmitting] = useState(false);
-  const [isSavingReview, setIsSavingReview] = useState(false);
-  const [isSavingWorker, setIsSavingWorker] = useState(false);
   const [showAdminInput, setShowAdminInput] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminClickCount, setAdminClickCount] = useState(0);
@@ -270,15 +266,11 @@ export default function HomeFixPage() {
   };
 
   const handleLogout = async () => {
-    setIsSavingReview(true);
-
     try {
       await signOut(auth);
       alert('Sesión cerrada');
     } catch (error) {
       alert(error.message);
-    } finally {
-      setIsAuthSubmitting(false);
     }
   };
 
@@ -293,40 +285,11 @@ export default function HomeFixPage() {
       alert('Perfil actualizado');
     } catch (error) {
       alert(error.message);
-    } finally {
-      setIsAuthSubmitting(false);
     }
-  };
-
-
-  const loadAllReviews = async () => {
-    try {
-      const snapshot = await getDocs(collection(db, 'reviews'));
-      const reviews = snapshot.docs.map((docItem) => ({
-        id: docItem.id,
-        ...docItem.data(),
-      }));
-      setAllReviews(reviews);
-    } catch (error) {
-      console.error('Error cargando reseñas:', error);
-    }
-  };
-
-  const getAverageForWorker = (pro) => {
-    const workerId = buildWorkerId(pro);
-    const list = allReviews.filter((r) => r.workerId === workerId);
-    if (!list.length) return pro.rating || 'Nuevo';
-    return (list.reduce((sum, r) => sum + Number(r.stars || 0), 0) / list.length).toFixed(1);
-  };
-
-  const getCountForWorker = (pro) => {
-    const workerId = buildWorkerId(pro);
-    return allReviews.filter((r) => r.workerId === workerId).length;
   };
 
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
-    setIsAuthSubmitting(true);
 
     try {
       if (authMode === 'register') {
@@ -378,8 +341,6 @@ export default function HomeFixPage() {
       }
     } catch (error) {
       alert(error.message);
-    } finally {
-      setIsAuthSubmitting(false);
     }
   };
 
@@ -470,8 +431,6 @@ export default function HomeFixPage() {
       return;
     }
 
-    setIsSavingReview(true);
-
     try {
       const reviewData = {
         workerId: buildWorkerId(pro),
@@ -492,24 +451,27 @@ export default function HomeFixPage() {
 
       await loadReviewsForWorker(pro);
       await loadMyReviews();
-      await loadAllReviews();
 
       alert('Reseña guardada correctamente');
     } catch (error) {
       console.error(error);
       alert('Error guardando la reseña');
-    } finally {
-      setIsSavingReview(false);
     }
   };
 
   const getReviewsForProfessional = (pro) => {
     const workerId = buildWorkerId(pro);
-    const list = allReviews.filter((r) => r.workerId === workerId);
+    const list = savedReviews.filter((r) => r.workerId === workerId);
+
+    if (list.length === 0) {
+      return [
+        { id: 'seed-1', stars: 5, text: 'Muy buen servicio.' },
+        { id: 'seed-2', stars: 4, text: 'Llegó puntual y resolvió rápido.' },
+      ];
+    }
 
     if (reviewFilter === 'highest') return [...list].sort((a, b) => b.stars - a.stars);
     if (reviewFilter === 'lowest') return [...list].sort((a, b) => a.stars - b.stars);
-
     return list;
   };
 
@@ -528,7 +490,6 @@ export default function HomeFixPage() {
     };
 
     fetchWorkers();
-    loadAllReviews();
   }, []);
 
   useEffect(() => {
@@ -575,8 +536,6 @@ export default function HomeFixPage() {
       reviewEntries: [],
     };
 
-    setIsSavingWorker(true);
-
     try {
       await addDoc(collection(db, 'workers'), workerToSave);
 
@@ -593,8 +552,6 @@ export default function HomeFixPage() {
     } catch (error) {
       console.error(error);
       alert('Error guardando en Firebase');
-    } finally {
-      setIsSavingWorker(false);
     }
   };
 
@@ -738,7 +695,7 @@ export default function HomeFixPage() {
                 {authMode === 'register' && (
                   <input type="password" value={authForm.confirmPassword} onChange={(e) => setAuthForm({ ...authForm, confirmPassword: e.target.value })} placeholder="Confirmar contraseña" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
                 )}
-                <button type="submit" disabled={isAuthSubmitting} className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white disabled:opacity-60">{isAuthSubmitting ? 'Cargando...' : authMode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
+                <button type="submit" className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">{authMode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
               </form>
 
               <div className="mt-4 rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/65">
@@ -816,13 +773,7 @@ export default function HomeFixPage() {
                         ))}
                       </div>
                       <textarea value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Dejá tu reseña" className="w-full rounded-2xl border border-black p-3 text-sm" />
-                      <button disabled={!currentUser || isSavingReview} onClick={() => addReview(selectedProfessional)} className="rounded-2xl bg-black px-4 py-2 font-semibold text-white disabled:opacity-60">{!currentUser ? 'Iniciá sesión para reseñar' : isSavingReview ? 'Guardando...' : 'Enviar reseña'}</button>
-
-                      {getReviewsForProfessional(selectedProfessional).length === 0 && (
-                        <div className="rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/60">
-                          Este profesional todavía no tiene reseñas. Sé el primero en dejar una.
-                        </div>
-                      )}
+                      <button onClick={() => addReview(selectedProfessional)} className="rounded-2xl bg-black px-4 py-2 font-semibold text-white">Enviar reseña</button>
 
                       {getReviewsForProfessional(selectedProfessional).map((r) => (
                         <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
@@ -965,7 +916,6 @@ export default function HomeFixPage() {
 
                   <div className="space-y-3 text-sm text-black/75">
                     <p><span className="font-semibold text-black">Reseñas:</span> {reviews.length} opiniones</p>
-                    <p><span className="font-semibold text-black">Reseñas:</span> {reviewCount}</p>
                     <p><span className="font-semibold text-black">Zona:</span> {pro.area}</p>
                     <p><span className="font-semibold text-black">Disponibilidad:</span> {pro.availability || 'Disponible ahora'}</p>
                     <p><span className="font-semibold text-black">Contacto:</span> {formatPhoneDisplay(pro.contact)}</p>
@@ -1144,7 +1094,7 @@ export default function HomeFixPage() {
                     }}
                   />
                   <textarea placeholder="Sobre este profesional" value={newWorker.about} onChange={(e) => setNewWorker({ ...newWorker, about: e.target.value })} className="mb-2 min-h-[96px] w-full rounded border p-2" />
-                  <button disabled={isSavingWorker} onClick={addWorker} className="rounded bg-black px-4 py-2 text-white disabled:opacity-60">{isSavingWorker ? 'Guardando...' : 'Guardar'}</button>
+                  <button onClick={addWorker} className="rounded bg-black px-4 py-2 text-white">Guardar</button>
 
                   <div className="mt-4 space-y-4">
                     {addedWorkers.length === 0 && (
