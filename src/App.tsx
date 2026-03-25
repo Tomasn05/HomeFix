@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { auth, db } from './firebase';
 import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut, updateProfile } from 'firebase/auth';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, addDoc } from 'firebase/firestore';
 
 const BASE_SERVICES = [
   {
@@ -431,24 +431,53 @@ export default function HomeFixPage() {
     return () => unsubscribe();
   }, []);
 
-  const addWorker = () => {
+  const addWorker = async () => {
     const phoneDigits = String(newWorker.contact || '').replace(/[^0-9]/g, '');
+
     if (!newWorker.name.trim() || !newWorker.role.trim()) return;
+
     if (phoneDigits.length !== 10) {
       alert('El tel√©fono debe tener 10 d√≠gitos.');
       return;
     }
-    setAddedWorkers((prev) => [...prev, {
-      id: safeUuid(),
+
+    const workerToSave = {
       ...newWorker,
       contact: phoneDigits,
       rating: 'Nuevo',
       reviews: 0,
       availability: 'Disponible ahora',
       reviewEntries: [],
-    }]);
-    setNewWorker({ name: '', role: 'Plomer√≠a', area: 'Capital', contact: '', email: '', photoUrl: '', about: '' });
-    setNewWorkerFileInputKey((prev) => prev + 1);
+    };
+
+    try {
+      await addDoc(collection(db, 'workers'), workerToSave);
+
+      const snapshot = await getDocs(collection(db, 'workers'));
+      const workers = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setAddedWorkers(workers);
+
+      setNewWorker({
+        name: '',
+        role: 'Plomer√≠a',
+        area: 'Capital',
+        contact: '',
+        email: '',
+        photoUrl: '',
+        about: '',
+      });
+
+      setNewWorkerFileInputKey((prev) => prev + 1);
+
+      alert('Profesional guardado en la nube üöÄ');
+    } catch (error) {
+      console.error(error);
+      alert('Error guardando en Firebase');
+    }
   };
 
   return (
