@@ -5,92 +5,92 @@ import { collection, getDocs, addDoc } from 'firebase/firestore';
 
 const BASE_SERVICES = [
   {
-    name: 'Plomer√≠a',
-    icon: 'üîß',
-    desc: 'P√©rdidas, destapes, instalaciones y reparaciones.',
+    name: 'Plomería',
+    icon: '🔧',
+    desc: 'Pérdidas, destapes, instalaciones y reparaciones.',
     workers: [
-      { name: 'Nicol√°s Rivas', role: 'Plomero domiciliario', rating: '4.9', reviews: 154, area: 'Godoy Cruz', availability: 'Disponible hoy ¬∑ 17:00 a 21:00', contact: '+54 9 261 555-3121' },
-      { name: 'Franco Lima', role: 'Destapes e instalaciones', rating: '4.7', reviews: 96, area: 'Luj√°n de Cuyo', availability: 'Ma√±ana ¬∑ 09:00 a 13:00', contact: '+54 9 261 555-4482' },
+      { name: 'Nicolás Rivas', role: 'Plomero domiciliario', rating: '4.9', reviews: 154, area: 'Godoy Cruz', availability: 'Disponible hoy · 17:00 a 21:00', contact: '+54 9 261 555-3121' },
+      { name: 'Franco Lima', role: 'Destapes e instalaciones', rating: '4.7', reviews: 96, area: 'Luján de Cuyo', availability: 'Mañana · 09:00 a 13:00', contact: '+54 9 261 555-4482' },
       { name: 'Ezequiel Torres', role: 'Urgencias y reparaciones', rating: '4.8', reviews: 121, area: 'Ciudad de Mendoza', availability: 'Disponible ahora', contact: '+54 9 261 555-6604' },
     ],
   },
   {
     name: 'Electricidad',
-    icon: '‚ö°',
+    icon: '⚡',
     desc: 'Arreglos, cableado, luces, tableros y urgencias.',
     workers: [
-      { name: 'Tom√°s Notti', role: 'Electricista domiciliario', rating: '5.0', reviews: 32, area: 'Godoy Cruz', availability: 'Disponible ahora', contact: '+54 9 261 555-0000', photoUrl: '', about: 'Electricista con experiencia en instalaciones, urgencias y mantenimiento general. Trabajo prolijo y r√°pido.' },
-      { name: 'Mat√≠as Gil', role: 'Electricista matriculado', rating: '4.9', reviews: 138, area: 'Maip√∫', availability: 'Hoy ¬∑ 18:30 a 22:00', contact: '+54 9 261 555-7810' },
-      { name: 'Santiago Correa', role: 'Tableros y luminarias', rating: '4.6', reviews: 82, area: 'Guaymall√©n', availability: 'Ma√±ana ¬∑ 08:00 a 12:00', contact: '+54 9 261 555-9205' },
-      { name: 'Bruno Ag√ºero', role: 'Urgencias el√©ctricas', rating: '4.8', reviews: 110, area: 'Chacras de Coria', availability: 'Disponible ahora', contact: '+54 9 261 555-3348' },
+      { name: 'Tomás Notti', role: 'Electricista domiciliario', rating: '5.0', reviews: 32, area: 'Godoy Cruz', availability: 'Disponible ahora', contact: '+54 9 261 555-0000', photoUrl: '', about: 'Electricista con experiencia en instalaciones, urgencias y mantenimiento general. Trabajo prolijo y rápido.' },
+      { name: 'Matías Gil', role: 'Electricista matriculado', rating: '4.9', reviews: 138, area: 'Maipú', availability: 'Hoy · 18:30 a 22:00', contact: '+54 9 261 555-7810' },
+      { name: 'Santiago Correa', role: 'Tableros y luminarias', rating: '4.6', reviews: 82, area: 'Guaymallén', availability: 'Mañana · 08:00 a 12:00', contact: '+54 9 261 555-9205' },
+      { name: 'Bruno Agüero', role: 'Urgencias eléctricas', rating: '4.8', reviews: 110, area: 'Chacras de Coria', availability: 'Disponible ahora', contact: '+54 9 261 555-3348' },
     ],
   },
   {
     name: 'Gas',
-    icon: 'üî•',
+    icon: '🔥',
     desc: 'Gasistas matriculados para revisiones e instalaciones.',
     workers: [
-      { name: 'Juan P√©rez', role: 'Gasista matriculado', rating: '4.9', reviews: 128, area: 'Godoy Cruz', availability: 'Disponible hoy ¬∑ 18:00 a 21:00', contact: '+54 9 261 555-1234' },
-      { name: 'Mart√≠n Sosa', role: 'Gasista domiciliario', rating: '4.8', reviews: 94, area: 'Chacras de Coria', availability: 'Disponible ma√±ana ¬∑ 09:00 a 13:00', contact: '+54 9 261 555-2088' },
-      { name: 'Leandro D√≠az', role: 'Instalaciones y reparaciones', rating: '4.7', reviews: 76, area: 'Ciudad de Mendoza', availability: 'Disponible ahora', contact: '+54 9 261 555-4477' },
+      { name: 'Juan Pérez', role: 'Gasista matriculado', rating: '4.9', reviews: 128, area: 'Godoy Cruz', availability: 'Disponible hoy · 18:00 a 21:00', contact: '+54 9 261 555-1234' },
+      { name: 'Martín Sosa', role: 'Gasista domiciliario', rating: '4.8', reviews: 94, area: 'Chacras de Coria', availability: 'Disponible mañana · 09:00 a 13:00', contact: '+54 9 261 555-2088' },
+      { name: 'Leandro Díaz', role: 'Instalaciones y reparaciones', rating: '4.7', reviews: 76, area: 'Ciudad de Mendoza', availability: 'Disponible ahora', contact: '+54 9 261 555-4477' },
     ],
   },
   {
     name: 'Aire acondicionado',
-    icon: '‚ùÑÔ∏è',
-    desc: 'Instalaci√≥n, mantenimiento y service t√©cnico.',
+    icon: '❄️',
+    desc: 'Instalación, mantenimiento y service técnico.',
     workers: [
-      { name: 'Federico Lobo', role: 'Instalaci√≥n y service', rating: '4.8', reviews: 102, area: 'Ciudad de Mendoza', availability: 'Hoy ¬∑ 16:00 a 20:00', contact: '+54 9 261 555-1470' },
-      { name: 'Tom√°s Becerra', role: 'Mantenimiento preventivo', rating: '4.7', reviews: 73, area: 'Godoy Cruz', availability: 'Ma√±ana ¬∑ 10:00 a 14:00', contact: '+54 9 261 555-2589' },
-      { name: 'Lucas Ferreyra', role: 'Reparaciones y carga', rating: '4.9', reviews: 131, area: 'Guaymall√©n', availability: 'Disponible ahora', contact: '+54 9 261 555-6691' },
+      { name: 'Federico Lobo', role: 'Instalación y service', rating: '4.8', reviews: 102, area: 'Ciudad de Mendoza', availability: 'Hoy · 16:00 a 20:00', contact: '+54 9 261 555-1470' },
+      { name: 'Tomás Becerra', role: 'Mantenimiento preventivo', rating: '4.7', reviews: 73, area: 'Godoy Cruz', availability: 'Mañana · 10:00 a 14:00', contact: '+54 9 261 555-2589' },
+      { name: 'Lucas Ferreyra', role: 'Reparaciones y carga', rating: '4.9', reviews: 131, area: 'Guaymallén', availability: 'Disponible ahora', contact: '+54 9 261 555-6691' },
     ],
   },
   {
     name: 'Pintura',
-    icon: 'üé®',
+    icon: '🎨',
     desc: 'Interior, exterior, retoques y trabajos completos.',
     workers: [
-      { name: 'Agust√≠n Vera', role: 'Pintor interior', rating: '4.8', reviews: 88, area: 'Luj√°n de Cuyo', availability: 'Hoy ¬∑ 15:00 a 19:00', contact: '+54 9 261 555-7402' },
-      { name: 'Facundo Paz', role: 'Retoques y terminaciones', rating: '4.6', reviews: 61, area: 'Ciudad de Mendoza', availability: 'Ma√±ana ¬∑ 09:00 a 12:00', contact: '+54 9 261 555-8023' },
+      { name: 'Agustín Vera', role: 'Pintor interior', rating: '4.8', reviews: 88, area: 'Luján de Cuyo', availability: 'Hoy · 15:00 a 19:00', contact: '+54 9 261 555-7402' },
+      { name: 'Facundo Paz', role: 'Retoques y terminaciones', rating: '4.6', reviews: 61, area: 'Ciudad de Mendoza', availability: 'Mañana · 09:00 a 12:00', contact: '+54 9 261 555-8023' },
       { name: 'Gonzalo Videla', role: 'Pintura completa', rating: '4.9', reviews: 117, area: 'Chacras de Coria', availability: 'Disponible ahora', contact: '+54 9 261 555-9317' },
     ],
   },
   {
-    name: 'Carpinter√≠a',
-    icon: 'ü™ö',
+    name: 'Carpintería',
+    icon: '🪚',
     desc: 'Muebles, arreglos, puertas y trabajos a medida.',
     workers: [
-      { name: 'Lucas Herrera', role: 'Carpintero general', rating: '4.8', reviews: 95, area: 'Godoy Cruz', availability: 'Hoy ¬∑ 16:00 a 20:00', contact: '+54 9 261 555-2231' },
-      { name: 'Mariano D√≠az', role: 'Muebles a medida', rating: '4.9', reviews: 112, area: 'Luj√°n de Cuyo', availability: 'Ma√±ana ¬∑ 09:00 a 13:00', contact: '+54 9 261 555-7782' },
-      { name: 'Sergio L√≥pez', role: 'Reparaciones', rating: '4.7', reviews: 68, area: 'Ciudad de Mendoza', availability: 'Disponible ahora', contact: '+54 9 261 555-9901' },
+      { name: 'Lucas Herrera', role: 'Carpintero general', rating: '4.8', reviews: 95, area: 'Godoy Cruz', availability: 'Hoy · 16:00 a 20:00', contact: '+54 9 261 555-2231' },
+      { name: 'Mariano Díaz', role: 'Muebles a medida', rating: '4.9', reviews: 112, area: 'Luján de Cuyo', availability: 'Mañana · 09:00 a 13:00', contact: '+54 9 261 555-7782' },
+      { name: 'Sergio López', role: 'Reparaciones', rating: '4.7', reviews: 68, area: 'Ciudad de Mendoza', availability: 'Disponible ahora', contact: '+54 9 261 555-9901' },
     ],
   },
   {
     name: 'Piletero',
-    icon: 'üèä',
+    icon: '🏊',
     desc: 'Mantenimiento, limpieza y tratamiento de piscinas.',
     workers: [
-      { name: 'Diego Ruiz', role: 'Mantenimiento de piletas', rating: '4.9', reviews: 87, area: 'Chacras de Coria', availability: 'Hoy ¬∑ 14:00 a 18:00', contact: '+54 9 261 555-4412' },
-      { name: 'Facundo R√≠os', role: 'Limpieza y qu√≠micos', rating: '4.6', reviews: 55, area: 'Maip√∫', availability: 'Ma√±ana ¬∑ 10:00 a 13:00', contact: '+54 9 261 555-6633' },
-      { name: 'Tom√°s Vega', role: 'Service completo', rating: '4.8', reviews: 74, area: 'Guaymall√©n', availability: 'Disponible ahora', contact: '+54 9 261 555-8890' },
+      { name: 'Diego Ruiz', role: 'Mantenimiento de piletas', rating: '4.9', reviews: 87, area: 'Chacras de Coria', availability: 'Hoy · 14:00 a 18:00', contact: '+54 9 261 555-4412' },
+      { name: 'Facundo Ríos', role: 'Limpieza y químicos', rating: '4.6', reviews: 55, area: 'Maipú', availability: 'Mañana · 10:00 a 13:00', contact: '+54 9 261 555-6633' },
+      { name: 'Tomás Vega', role: 'Service completo', rating: '4.8', reviews: 74, area: 'Guaymallén', availability: 'Disponible ahora', contact: '+54 9 261 555-8890' },
     ],
   },
 ];
 
 const HELP_SUGGESTIONS = [
-  { title: 'Pierde agua una canilla', service: 'Plomer√≠a', answer: 'Parece un problema de plomer√≠a. Te mostramos plomeros disponibles.' },
-  { title: 'Salta la t√©rmica', service: 'Electricidad', answer: 'Esto suele ser el√©ctrico. Te mostramos electricistas.' },
-  { title: 'Problema con calef√≥n o gas', service: 'Gas', answer: 'Necesit√°s un gasista matriculado. Te mostramos opciones.' },
-  { title: 'El aire no enfr√≠a', service: 'Aire acondicionado', answer: 'Probablemente sea el aire acondicionado. Te mostramos t√©cnicos.' },
+  { title: 'Pierde agua una canilla', service: 'Plomería', answer: 'Parece un problema de plomería. Te mostramos plomeros disponibles.' },
+  { title: 'Salta la térmica', service: 'Electricidad', answer: 'Esto suele ser eléctrico. Te mostramos electricistas.' },
+  { title: 'Problema con calefón o gas', service: 'Gas', answer: 'Necesitás un gasista matriculado. Te mostramos opciones.' },
+  { title: 'El aire no enfría', service: 'Aire acondicionado', answer: 'Probablemente sea el aire acondicionado. Te mostramos técnicos.' },
   { title: 'Quiero pintar mi casa', service: 'Pintura', answer: 'Te mostramos pintores disponibles.' },
-  { title: 'Necesito arreglar un mueble', service: 'Carpinter√≠a', answer: 'Te mostramos carpinteros.' },
+  { title: 'Necesito arreglar un mueble', service: 'Carpintería', answer: 'Te mostramos carpinteros.' },
   { title: 'Mantenimiento de pileta', service: 'Piletero', answer: 'Te mostramos pileteros disponibles.' },
 ];
 
 const MENDOZA_DEPARTMENTS = [
-  'Capital', 'Godoy Cruz', 'Guaymall√©n', 'Las Heras', 'Luj√°n de Cuyo', 'Maip√∫',
-  'Jun√≠n', 'Rivadavia', 'San Mart√≠n', 'Santa Rosa', 'La Paz', 'Lavalle',
-  'Tunuy√°n', 'Tupungato', 'San Carlos', 'San Rafael', 'General Alvear', 'Malarg√ºe',
+  'Capital', 'Godoy Cruz', 'Guaymallén', 'Las Heras', 'Luján de Cuyo', 'Maipú',
+  'Junín', 'Rivadavia', 'San Martín', 'Santa Rosa', 'La Paz', 'Lavalle',
+  'Tunuyán', 'Tupungato', 'San Carlos', 'San Rafael', 'General Alvear', 'Malargüe',
 ];
 
 function initials(name) {
@@ -104,12 +104,12 @@ function initials(name) {
 function matchesService(role, serviceName) {
   const roleText = String(role || '').toLowerCase();
   const name = String(serviceName || '').toLowerCase();
-  if (name === 'plomer√≠a') return roleText.includes('plom');
+  if (name === 'plomería') return roleText.includes('plom');
   if (name === 'electricidad') return roleText.includes('electric');
   if (name === 'gas') return roleText.includes('gas');
   if (name === 'aire acondicionado') return roleText.includes('aire');
   if (name === 'pintura') return roleText.includes('pint');
-  if (name === 'carpinter√≠a') return roleText.includes('carp');
+  if (name === 'carpintería') return roleText.includes('carp');
   if (name === 'piletero') return roleText.includes('pile');
   return false;
 }
@@ -136,17 +136,17 @@ export default function HomeFixPage() {
   const profileRef = useRef(null);
 
   const [creatorProfile, setCreatorProfile] = useState({
-    name: 'Tom√°s Notti',
+    name: 'Tomás Notti',
     role: 'Creador de HomeFix',
     email: 'homefix@demo.com',
     phone: '+54 9 261 000-0000',
     city: 'Mendoza',
-    bio: 'Estoy construyendo HomeFix para conectar clientes con profesionales confiables de forma simple y r√°pida.',
+    bio: 'Estoy construyendo HomeFix para conectar clientes con profesionales confiables de forma simple y rápida.',
   });
 
   const [newWorker, setNewWorker] = useState({
     name: '',
-    role: 'Plomer√≠a',
+    role: 'Plomería',
     area: 'Capital',
     contact: '',
     email: '',
@@ -212,15 +212,15 @@ export default function HomeFixPage() {
   const creatorWhatsappLink = `https://wa.me/${formatPhoneForWhatsApp(creatorProfile.phone)}`;
 
   const getSmartMessage = (pro, service) => {
-    const base = `Hola ${pro.name}, te encontr√© en HomeFix.`;
-    if (service === 'Plomer√≠a') return `${base} Tengo una p√©rdida de agua en casa, ¬øpod√©s ayudarme?`;
-    if (service === 'Electricidad') return `${base} Estoy teniendo problemas el√©ctricos (salta la t√©rmica / cortes).`;
-    if (service === 'Gas') return `${base} Necesito revisar un tema de gas o calef√≥n.`;
-    if (service === 'Aire acondicionado') return `${base} El aire acondicionado no est√° funcionando bien.`;
+    const base = `Hola ${pro.name}, te encontré en HomeFix.`;
+    if (service === 'Plomería') return `${base} Tengo una pérdida de agua en casa, ¿podés ayudarme?`;
+    if (service === 'Electricidad') return `${base} Estoy teniendo problemas eléctricos (salta la térmica / cortes).`;
+    if (service === 'Gas') return `${base} Necesito revisar un tema de gas o calefón.`;
+    if (service === 'Aire acondicionado') return `${base} El aire acondicionado no está funcionando bien.`;
     if (service === 'Pintura') return `${base} Quiero pintar un ambiente de mi casa.`;
-    if (service === 'Carpinter√≠a') return `${base} Necesito arreglar o hacer un mueble.`;
+    if (service === 'Carpintería') return `${base} Necesito arreglar o hacer un mueble.`;
     if (service === 'Piletero') return `${base} Necesito mantenimiento para la pileta.`;
-    return `${base} Quer√≠a consultarte por un trabajo.`;
+    return `${base} Quería consultarte por un trabajo.`;
   };
 
   const openWhatsApp = (contact, message) => {
@@ -255,7 +255,7 @@ export default function HomeFixPage() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      alert('Sesi√≥n cerrada');
+      alert('Sesión cerrada');
     } catch (error) {
       alert(error.message);
     }
@@ -281,7 +281,7 @@ export default function HomeFixPage() {
     try {
       if (authMode === 'register') {
         if (authForm.password !== authForm.confirmPassword) {
-          alert('Las contrase√±as no coinciden');
+          alert('Las contraseñas no coinciden');
           return;
         }
 
@@ -297,7 +297,7 @@ export default function HomeFixPage() {
           });
         }
 
-        alert('Cuenta creada con √©xito');
+        alert('Cuenta creada con éxito');
         closeAuthModal();
       } else {
         await signInWithEmailAndPassword(
@@ -325,7 +325,7 @@ export default function HomeFixPage() {
       setShowAdminInput(false);
       setAdminPassword('');
     } else {
-      alert('Contrase√±a incorrecta');
+      alert('Contraseña incorrecta');
     }
   };
 
@@ -389,7 +389,7 @@ export default function HomeFixPage() {
     const dynamicReviews = idx !== -1 ? addedWorkers[idx]?.reviewEntries || [] : tempReviews[pro.contact] || [];
     const baseReviews = [
       { id: 'seed-1', stars: 5, text: 'Muy buen servicio.' },
-      { id: 'seed-2', stars: 4, text: 'Lleg√≥ puntual y resolvi√≥ r√°pido.' },
+      { id: 'seed-2', stars: 4, text: 'Llegó puntual y resolvió rápido.' },
     ];
     const list = dynamicReviews.length > 0 ? dynamicReviews : baseReviews;
     if (reviewFilter === 'highest') return [...list].sort((a, b) => b.stars - a.stars);
@@ -437,7 +437,7 @@ export default function HomeFixPage() {
     if (!newWorker.name.trim() || !newWorker.role.trim()) return;
 
     if (phoneDigits.length !== 10) {
-      alert('El tel√©fono debe tener 10 d√≠gitos.');
+      alert('El teléfono debe tener 10 dígitos.');
       return;
     }
 
@@ -460,20 +460,9 @@ export default function HomeFixPage() {
       }));
 
       setAddedWorkers(workers);
-
-      setNewWorker({
-        name: '',
-        role: 'Plomer√≠a',
-        area: 'Capital',
-        contact: '',
-        email: '',
-        photoUrl: '',
-        about: '',
-      });
-
+      setNewWorker({ name: '', role: 'Plomería', area: 'Capital', contact: '', email: '', photoUrl: '', about: '' });
       setNewWorkerFileInputKey((prev) => prev + 1);
-
-      alert('Profesional guardado en la nube üöÄ');
+      alert('Profesional guardado en la nube 🚀');
     } catch (error) {
       console.error(error);
       alert('Error guardando en Firebase');
@@ -512,7 +501,7 @@ export default function HomeFixPage() {
                   }}
                   className="cursor-pointer rounded-full border px-2 py-1 text-xs"
                 >
-                  ‚óè
+                  ●
                 </span>
                 {isCreatorMode && <span className="rounded-full bg-black px-2 py-1 text-xs font-bold text-white">Modo creador</span>}
               </div>
@@ -525,7 +514,7 @@ export default function HomeFixPage() {
                     type="password"
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
-                    placeholder="Contrase√±a"
+                    placeholder="Contraseña"
                     className="w-full rounded-xl border border-black/20 px-3 py-2 text-sm outline-none focus:border-black"
                   />
                   <div className="mt-2 flex gap-2">
@@ -541,7 +530,7 @@ export default function HomeFixPage() {
             {currentUser ? (
               <>
                 <button onClick={scrollToProfile} className="text-sm font-semibold">Mi perfil</button>
-                <button onClick={handleLogout} className="rounded-xl border border-black px-3 py-2 text-sm font-semibold">Cerrar sesi√≥n</button>
+                <button onClick={handleLogout} className="rounded-xl border border-black px-3 py-2 text-sm font-semibold">Cerrar sesión</button>
               </>
             ) : (
               <>
@@ -553,7 +542,7 @@ export default function HomeFixPage() {
               <button
                 onClick={() => setIsMenuOpen((prev) => !prev)}
                 className="flex h-12 w-12 flex-col items-center justify-center gap-1.5 rounded-2xl border border-black/15 transition hover:border-black"
-                aria-label="Abrir men√∫"
+                aria-label="Abrir menú"
               >
                 <span className="h-0.5 w-5 bg-black" />
                 <span className="h-0.5 w-5 bg-black" />
@@ -562,14 +551,14 @@ export default function HomeFixPage() {
 
               {isMenuOpen && (
                 <>
-                  <button onClick={() => setIsMenuOpen(false)} className="fixed inset-0 z-40 bg-black/10" aria-label="Cerrar men√∫" />
+                  <button onClick={() => setIsMenuOpen(false)} className="fixed inset-0 z-40 bg-black/10" aria-label="Cerrar menú" />
                   <div className="absolute right-0 top-16 z-50 w-72 rounded-3xl border border-black bg-white p-4 shadow-2xl">
                     <div className="mb-3 px-2 pt-1">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-black/45">Men√∫</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-black/45">Menú</p>
                     </div>
                     <div className="flex flex-col gap-2">
                       <button onClick={() => scrollToSection('servicios')} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">Servicios</button>
-                      <button onClick={() => scrollToSection('como-funciona')} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">C√≥mo funciona</button>
+                      <button onClick={() => scrollToSection('como-funciona')} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">Cómo funciona</button>
                       <button onClick={() => scrollToSection('profesionales')} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">Profesionales</button>
                       {currentUser && (
                         <button onClick={scrollToProfile} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">Mi perfil</button>
@@ -590,10 +579,10 @@ export default function HomeFixPage() {
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/45">{authMode === 'login' ? 'Ingreso' : 'Registro'}</p>
-                  <h3 className="mt-2 text-3xl font-black tracking-tight">{authMode === 'login' ? 'Entr√° a HomeFix' : 'Cre√° tu cuenta'}</h3>
-                  <p className="mt-2 text-sm text-black/65">Esta pantalla ya est√° lista para conectarla con Firebase Auth.</p>
+                  <h3 className="mt-2 text-3xl font-black tracking-tight">{authMode === 'login' ? 'Entrá a HomeFix' : 'Creá tu cuenta'}</h3>
+                  <p className="mt-2 text-sm text-black/65">Esta pantalla ya está lista para conectarla con Firebase Auth.</p>
                 </div>
-                <button onClick={closeAuthModal} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">‚úï</button>
+                <button onClick={closeAuthModal} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">✕</button>
               </div>
 
               <div className="mb-5 grid grid-cols-2 gap-2 rounded-2xl bg-zinc-100 p-1">
@@ -616,15 +605,15 @@ export default function HomeFixPage() {
                   <input value={authForm.name} onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })} placeholder="Nombre y apellido" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
                 )}
                 <input type="email" value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} placeholder="Email" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
-                <input type="password" value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} placeholder="Contrase√±a" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
+                <input type="password" value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} placeholder="Contraseña" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
                 {authMode === 'register' && (
-                  <input type="password" value={authForm.confirmPassword} onChange={(e) => setAuthForm({ ...authForm, confirmPassword: e.target.value })} placeholder="Confirmar contrase√±a" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
+                  <input type="password" value={authForm.confirmPassword} onChange={(e) => setAuthForm({ ...authForm, confirmPassword: e.target.value })} placeholder="Confirmar contraseña" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
                 )}
                 <button type="submit" className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">{authMode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
               </form>
 
               <div className="mt-4 rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/65">
-                Pr√≥ximo paso: conectar esta pantalla con Firebase Authentication y guardar perfiles en Firestore.
+                Próximo paso: conectar esta pantalla con Firebase Authentication y guardar perfiles en Firestore.
               </div>
             </div>
           </div>
@@ -645,13 +634,13 @@ export default function HomeFixPage() {
                     <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{selectedProfessional.name}</h3>
                     <p className="mt-2 text-lg text-black/70">{selectedProfessional.role}</p>
                     <div className="mt-4 flex flex-wrap gap-3 text-sm">
-                      <span className="rounded-full border border-black px-4 py-2">‚≠ê {(() => {
+                      <span className="rounded-full border border-black px-4 py-2">⭐ {(() => {
                         const reviews = getReviewsForProfessional(selectedProfessional);
                         const avg = reviews.length ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1) : selectedProfessional.rating;
                         return avg;
                       })()}</span>
-                      <span className="rounded-full border border-black px-4 py-2">üìç {selectedProfessional.area}</span>
-                      <span className="rounded-full border border-black px-4 py-2">‚è∞ {selectedProfessional.availability}</span>
+                      <span className="rounded-full border border-black px-4 py-2">📍 {selectedProfessional.area}</span>
+                      <span className="rounded-full border border-black px-4 py-2">⏰ {selectedProfessional.availability}</span>
                     </div>
                   </div>
                 </div>
@@ -678,31 +667,31 @@ export default function HomeFixPage() {
                 <div className="space-y-6">
                   <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
                     <h4 className="text-xl font-bold">Sobre este profesional</h4>
-                    <p className="mt-4 text-black/75">{selectedProfessional.about || 'Profesional verificado dentro de HomeFix con atenci√≥n personalizada y coordinaci√≥n directa con el cliente.'}</p>
+                    <p className="mt-4 text-black/75">{selectedProfessional.about || 'Profesional verificado dentro de HomeFix con atención personalizada y coordinación directa con el cliente.'}</p>
                   </div>
 
                   <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
-                      <h4 className="text-xl font-bold">Rese√±as</h4>
+                      <h4 className="text-xl font-bold">Reseñas</h4>
                       <select value={reviewFilter} onChange={(e) => setReviewFilter(e.target.value)} className="rounded-xl border border-black/20 px-3 py-2 text-sm">
                         <option value="all">Todas</option>
-                        <option value="highest">M√°s altas</option>
-                        <option value="lowest">M√°s bajas</option>
+                        <option value="highest">Más altas</option>
+                        <option value="lowest">Más bajas</option>
                       </select>
                     </div>
 
                     <div className="mt-4 space-y-3">
                       <div className="flex items-center gap-2">
                         {[1, 2, 3, 4, 5].map((s) => (
-                          <button key={s} onClick={() => setReviewStars(s)} className={`text-2xl ${reviewStars >= s ? '' : 'opacity-30'}`}>‚≠ê</button>
+                          <button key={s} onClick={() => setReviewStars(s)} className={`text-2xl ${reviewStars >= s ? '' : 'opacity-30'}`}>⭐</button>
                         ))}
                       </div>
-                      <textarea value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Dej√° tu rese√±a" className="w-full rounded-2xl border border-black p-3 text-sm" />
-                      <button onClick={() => addReview(selectedProfessional)} className="rounded-2xl bg-black px-4 py-2 font-semibold text-white">Enviar rese√±a</button>
+                      <textarea value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Dejá tu reseña" className="w-full rounded-2xl border border-black p-3 text-sm" />
+                      <button onClick={() => addReview(selectedProfessional)} className="rounded-2xl bg-black px-4 py-2 font-semibold text-white">Enviar reseña</button>
 
                       {getReviewsForProfessional(selectedProfessional).map((r) => (
                         <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
-                          {'‚≠ê'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
+                          {'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
                         </div>
                       ))}
                     </div>
@@ -711,12 +700,12 @@ export default function HomeFixPage() {
 
                 <div className="space-y-6">
                   <div className="rounded-3xl border border-black bg-black p-6 text-white shadow-sm">
-                    <h4 className="text-xl font-bold">Informaci√≥n principal</h4>
+                    <h4 className="text-xl font-bold">Información principal</h4>
                     <div className="mt-5 space-y-3 text-sm text-white/85">
                       <p><span className="font-semibold text-white">Contacto:</span> {formatPhoneDisplay(selectedProfessional.contact)}</p>
                       {selectedProfessional.email && <p><span className="font-semibold text-white">Email:</span> {selectedProfessional.email}</p>}
                       <p><span className="font-semibold text-white">Precio:</span> Consultar precio</p>
-                      <p><span className="font-semibold text-white">Opiniones:</span> {getReviewsForProfessional(selectedProfessional).length} rese√±as</p>
+                      <p><span className="font-semibold text-white">Opiniones:</span> {getReviewsForProfessional(selectedProfessional).length} reseñas</p>
                     </div>
                     <button onClick={() => openWhatsApp(selectedProfessional.contact, getSmartMessage(selectedProfessional, selectedService))} className="mt-6 w-full rounded-2xl bg-white px-4 py-3 font-semibold text-black">Contactar por WhatsApp</button>
                   </div>
@@ -728,9 +717,9 @@ export default function HomeFixPage() {
 
         <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 md:grid-cols-2 md:py-24">
           <div>
-            <span className="mb-6 inline-flex rounded-full border border-black px-4 py-2 text-sm font-semibold">Encontr√° ayuda confiable en minutos</span>
+            <span className="mb-6 inline-flex rounded-full border border-black px-4 py-2 text-sm font-semibold">Encontrá ayuda confiable en minutos</span>
             <h2 className="mb-6 text-5xl font-black leading-none tracking-tight md:text-6xl">Soluciones reales para problemas reales.</h2>
-            <p className="mb-8 max-w-xl text-lg leading-relaxed text-black/70">En HomeFix conectamos personas con profesionales confiables para resolver tareas del hogar de forma r√°pida, clara y segura.</p>
+            <p className="mb-8 max-w-xl text-lg leading-relaxed text-black/70">En HomeFix conectamos personas con profesionales confiables para resolver tareas del hogar de forma rápida, clara y segura.</p>
             <div className="flex flex-wrap gap-4">
               <button onClick={() => scrollToSection('servicios')} className="rounded-2xl bg-black px-6 py-4 font-semibold text-white shadow-lg">Buscar servicio</button>
               <button onClick={() => scrollToSection('profesionales')} className="rounded-2xl border border-black px-6 py-4 font-semibold">Ver profesionales</button>
@@ -750,7 +739,7 @@ export default function HomeFixPage() {
             </div>
             <div className="col-span-2 rounded-3xl border border-black p-6 shadow-sm">
               <p className="text-sm uppercase tracking-[0.2em] text-black/60">Confianza</p>
-              <p className="mt-3 text-3xl font-black">Sistema de rese√±as y calificaciones reales</p>
+              <p className="mt-3 text-3xl font-black">Sistema de reseñas y calificaciones reales</p>
               <p className="mt-4 text-sm text-black/70">Cada cliente puede dejar su experiencia para ayudar a otros a elegir mejor.</p>
             </div>
           </div>
@@ -760,9 +749,9 @@ export default function HomeFixPage() {
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Servicios</p>
-              <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Eleg√≠ lo que necesit√°s</h3>
+              <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Elegí lo que necesitás</h3>
             </div>
-            <p className="hidden max-w-md text-right text-black/60 md:block">Cada categor√≠a muestra profesionales con horarios, zona, calificaci√≥n y modalidad de precio.</p>
+            <p className="hidden max-w-md text-right text-black/60 md:block">Cada categoría muestra profesionales con horarios, zona, calificación y modalidad de precio.</p>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -790,20 +779,20 @@ export default function HomeFixPage() {
 
         <section id="como-funciona" className="mx-auto max-w-7xl px-6 py-16">
           <div className="rounded-[2rem] bg-black p-8 text-white md:p-12">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">C√≥mo funciona</p>
-            <h3 className="mb-10 mt-3 text-3xl font-black tracking-tight md:text-4xl">R√°pido, claro y con ayuda inteligente</h3>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">Cómo funciona</p>
+            <h3 className="mb-10 mt-3 text-3xl font-black tracking-tight md:text-4xl">Rápido, claro y con ayuda inteligente</h3>
             <div className="grid gap-6 md:grid-cols-4">
-              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">üîé</div><h4 className="mb-2 text-lg font-bold">1. Busc√°s</h4><p className="text-sm text-white/75">Eleg√≠s el servicio que necesit√°s o consult√°s al asistente.</p></div>
-              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">üí°</div><h4 className="mb-2 text-lg font-bold">2. Te orienta</h4><p className="text-sm text-white/75">El asistente te ayuda a encontrar el rubro correcto.</p></div>
-              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">üë∑‚Äç‚ôÇÔ∏è</div><h4 className="mb-2 text-lg font-bold">3. Compar√°s</h4><p className="text-sm text-white/75">Ves perfiles con zona, horarios y calificaci√≥n.</p></div>
-              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">‚≠ê</div><h4 className="mb-2 text-lg font-bold">4. Contrat√°s y calific√°s</h4><p className="text-sm text-white/75">Contact√°s al profesional y despu√©s dej√°s tu rese√±a.</p></div>
+              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">🔎</div><h4 className="mb-2 text-lg font-bold">1. Buscás</h4><p className="text-sm text-white/75">Elegís el servicio que necesitás o consultás al asistente.</p></div>
+              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">💡</div><h4 className="mb-2 text-lg font-bold">2. Te orienta</h4><p className="text-sm text-white/75">El asistente te ayuda a encontrar el rubro correcto.</p></div>
+              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">👷‍♂️</div><h4 className="mb-2 text-lg font-bold">3. Comparás</h4><p className="text-sm text-white/75">Ves perfiles con zona, horarios y calificación.</p></div>
+              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">⭐</div><h4 className="mb-2 text-lg font-bold">4. Contratás y calificás</h4><p className="text-sm text-white/75">Contactás al profesional y después dejás tu reseña.</p></div>
             </div>
           </div>
         </section>
 
         <section id="profesionales" className="mx-auto max-w-7xl px-6 py-10 md:py-16">
           <div className="mb-8">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Categor√≠a seleccionada</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Categoría seleccionada</p>
             <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{activeService.name} disponibles</h3>
             <p className="mt-3 max-w-2xl text-black/70">Estas son opciones modelo dentro de {activeService.name}.</p>
           </div>
@@ -836,11 +825,11 @@ export default function HomeFixPage() {
                       <h4 className="text-2xl font-black leading-tight">{pro.name}</h4>
                       <p className="mt-1 text-black/70">{pro.role}</p>
                     </div>
-                    <div className="rounded-2xl bg-black px-3 py-2 text-sm font-bold text-white">‚≠ê {avg}</div>
+                    <div className="rounded-2xl bg-black px-3 py-2 text-sm font-bold text-white">⭐ {avg}</div>
                   </div>
 
                   <div className="space-y-3 text-sm text-black/75">
-                    <p><span className="font-semibold text-black">Rese√±as:</span> {reviews.length} opiniones</p>
+                    <p><span className="font-semibold text-black">Reseñas:</span> {reviews.length} opiniones</p>
                     <p><span className="font-semibold text-black">Zona:</span> {pro.area}</p>
                     <p><span className="font-semibold text-black">Disponibilidad:</span> {pro.availability || 'Disponible ahora'}</p>
                     <p><span className="font-semibold text-black">Contacto:</span> {formatPhoneDisplay(pro.contact)}</p>
@@ -863,7 +852,7 @@ export default function HomeFixPage() {
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Para profesionales</p>
               <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Sumate a HomeFix</h3>
-              <p className="mt-4 max-w-2xl text-black/70">Mostr√° tu perfil, tu disponibilidad y tus calificaciones para llegar a nuevos clientes todos los d√≠as.</p>
+              <p className="mt-4 max-w-2xl text-black/70">Mostrá tu perfil, tu disponibilidad y tus calificaciones para llegar a nuevos clientes todos los días.</p>
             </div>
             <button onClick={() => openWhatsApp(creatorProfile.phone, 'Hola Tomi, quiero ofrecer mis servicios en HomeFix.')} className="whitespace-nowrap rounded-2xl bg-black px-6 py-4 font-semibold text-white shadow-lg">Quiero ofrecer mis servicios</button>
           </div>
@@ -887,12 +876,12 @@ export default function HomeFixPage() {
                     <p className="mt-2 text-lg text-black/70">{profileForm.email}</p>
                     <div className="mt-4 flex flex-wrap gap-3 text-sm">
                       <span className="rounded-full border border-black px-4 py-2">
-                        ‚≠ê {Object.values(tempReviews).flat().length > 0
+                        ⭐ {Object.values(tempReviews).flat().length > 0
                           ? (Object.values(tempReviews).flat().reduce((sum, r) => sum + r.stars, 0) / Object.values(tempReviews).flat().length).toFixed(1)
                           : 'Sin puntaje'}
                       </span>
                       <span className="rounded-full border border-black px-4 py-2">
-                        üìù {Object.values(tempReviews).flat().length} rese√±as hechas
+                        📝 {Object.values(tempReviews).flat().length} reseñas hechas
                       </span>
                     </div>
                   </div>
@@ -942,16 +931,16 @@ export default function HomeFixPage() {
 
                 <div className="space-y-6">
                   <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
-                    <h4 className="text-xl font-bold">Mis rese√±as y puntajes</h4>
+                    <h4 className="text-xl font-bold">Mis reseñas y puntajes</h4>
                     <div className="mt-4 space-y-3">
                       {Object.values(tempReviews).flat().length === 0 ? (
                         <div className="rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/60">
-                          Todav√≠a no hiciste rese√±as.
+                          Todavía no hiciste reseñas.
                         </div>
                       ) : (
                         Object.values(tempReviews).flat().map((r) => (
                           <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
-                            {'‚≠ê'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
+                            {'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
                           </div>
                         ))
                       )}
@@ -969,18 +958,18 @@ export default function HomeFixPage() {
               <div className="mb-8">
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Panel privado del creador</p>
                 <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Tu perfil de creador</h3>
-                <p className="mt-3 max-w-2xl text-black/70">Gestion√° tu perfil y carg√° profesionales manualmente.</p>
+                <p className="mt-3 max-w-2xl text-black/70">Gestioná tu perfil y cargá profesionales manualmente.</p>
               </div>
 
               <div className="grid gap-6 lg:grid-cols-2">
                 <div className="rounded-3xl border border-black bg-white p-6">
-                  <h4 className="mb-4 font-bold">Perfil de Tom√°s Notti</h4>
+                  <h4 className="mb-4 font-bold">Perfil de Tomás Notti</h4>
                   <input value={creatorProfile.name} onChange={(e) => setCreatorProfile({ ...creatorProfile, name: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Nombre" />
                   <input value={creatorProfile.role} onChange={(e) => setCreatorProfile({ ...creatorProfile, role: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Rol" />
                   <input value={creatorProfile.email} onChange={(e) => setCreatorProfile({ ...creatorProfile, email: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Email" />
                   <input value={creatorProfile.phone} onChange={(e) => setCreatorProfile({ ...creatorProfile, phone: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="WhatsApp" />
                   <input value={creatorProfile.city} onChange={(e) => setCreatorProfile({ ...creatorProfile, city: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Ciudad" />
-                  <textarea value={creatorProfile.bio} onChange={(e) => setCreatorProfile({ ...creatorProfile, bio: e.target.value })} className="min-h-[96px] w-full rounded border p-2" placeholder="Descripci√≥n" />
+                  <textarea value={creatorProfile.bio} onChange={(e) => setCreatorProfile({ ...creatorProfile, bio: e.target.value })} className="min-h-[96px] w-full rounded border p-2" placeholder="Descripción" />
                 </div>
 
                 <div className="rounded-3xl border border-black bg-white p-6">
@@ -992,8 +981,8 @@ export default function HomeFixPage() {
                   <select value={newWorker.area} onChange={(e) => setNewWorker({ ...newWorker, area: e.target.value })} className="mb-2 w-full rounded border p-2">
                     {MENDOZA_DEPARTMENTS.map((department) => <option key={department} value={department}>{department}</option>)}
                   </select>
-                  <input placeholder="Tel√©fono (10 d√≠gitos)" value={newWorker.contact} onChange={(e) => setNewWorker({ ...newWorker, contact: e.target.value.replace(/[^0-9]/g, '').slice(0, 10) })} className="mb-2 w-full rounded border p-2" />
-                  <p className="mb-2 text-xs text-black/55">Se agrega autom√°ticamente +54 9 para WhatsApp.</p>
+                  <input placeholder="Teléfono (10 dígitos)" value={newWorker.contact} onChange={(e) => setNewWorker({ ...newWorker, contact: e.target.value.replace(/[^0-9]/g, '').slice(0, 10) })} className="mb-2 w-full rounded border p-2" />
+                  <p className="mb-2 text-xs text-black/55">Se agrega automáticamente +54 9 para WhatsApp.</p>
                   <input placeholder="Email" value={newWorker.email} onChange={(e) => setNewWorker({ ...newWorker, email: e.target.value })} className="mb-2 w-full rounded border p-2" />
                   <input
                     key={newWorkerFileInputKey}
@@ -1013,7 +1002,7 @@ export default function HomeFixPage() {
 
                   <div className="mt-4 space-y-4">
                     {addedWorkers.length === 0 && (
-                      <div className="rounded-2xl border border-dashed border-black/30 p-4 text-sm text-black/60">Todav√≠a no cargaste profesionales nuevos.</div>
+                      <div className="rounded-2xl border border-dashed border-black/30 p-4 text-sm text-black/60">Todavía no cargaste profesionales nuevos.</div>
                     )}
 
                     {addedWorkers.map((worker, index) => (
@@ -1021,7 +1010,7 @@ export default function HomeFixPage() {
                         <div className="mb-3 flex items-center justify-between gap-3">
                           <div>
                             <p className="text-sm font-bold">Perfil creado #{index + 1}</p>
-                            <p className="text-xs text-black/55">{worker.name || 'Sin nombre'} ¬∑ {worker.role || 'Sin especialidad'}</p>
+                            <p className="text-xs text-black/55">{worker.name || 'Sin nombre'} · {worker.role || 'Sin especialidad'}</p>
                           </div>
                           <div className="flex gap-2">
                             <button onClick={() => setEditingWorkerId(editingWorkerId === worker.id ? null : worker.id)} className="rounded-lg border border-black px-3 py-1 text-xs font-semibold">{editingWorkerId === worker.id ? 'Cerrar' : 'Editar'}</button>
@@ -1038,7 +1027,7 @@ export default function HomeFixPage() {
                             <select value={worker.area} onChange={(e) => updateWorker(worker.id, 'area', e.target.value)} className="w-full rounded border p-2">
                               {MENDOZA_DEPARTMENTS.map((department) => <option key={department} value={department}>{department}</option>)}
                             </select>
-                            <input value={String(worker.contact || '').replace(/[^0-9]/g, '').slice(-10)} onChange={(e) => updateWorker(worker.id, 'contact', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))} className="w-full rounded border p-2" placeholder="Tel√©fono (10 d√≠gitos)" />
+                            <input value={String(worker.contact || '').replace(/[^0-9]/g, '').slice(-10)} onChange={(e) => updateWorker(worker.id, 'contact', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))} className="w-full rounded border p-2" placeholder="Teléfono (10 dígitos)" />
                             <input value={worker.email || ''} onChange={(e) => updateWorker(worker.id, 'email', e.target.value)} className="w-full rounded border p-2" placeholder="Email" />
                             <input
                               type="file"
@@ -1076,9 +1065,9 @@ export default function HomeFixPage() {
 
       <footer className="border-t border-black/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-black/60 md:flex-row">
-          <p>¬© 2026 HomeFix. Todos los derechos reservados.</p>
+          <p>© 2026 HomeFix. Todos los derechos reservados.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-black">T√©rminos</a>
+            <a href="#" className="hover:text-black">Términos</a>
             <a href="#" className="hover:text-black">Privacidad</a>
             <a href="#" className="hover:text-black">Contacto</a>
           </div>
@@ -1090,9 +1079,9 @@ export default function HomeFixPage() {
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Asistente HomeFix</p>
-                  <h4 className="text-lg font-black">¬øA qui√©n necesito contratar?</h4>
+                  <h4 className="text-lg font-black">¿A quién necesito contratar?</h4>
                 </div>
-                <button onClick={() => setIsChatOpen(false)} className="rounded-full border border-black px-3 py-1 text-sm">‚úï</button>
+                <button onClick={() => setIsChatOpen(false)} className="rounded-full border border-black px-3 py-1 text-sm">✕</button>
               </div>
 
               <div className="mb-4 flex flex-wrap gap-2">
@@ -1112,16 +1101,16 @@ export default function HomeFixPage() {
               </div>
 
               <div className="mb-3 flex gap-2">
-                <input value={assistantInput} onChange={(e) => setAssistantInput(e.target.value)} placeholder="Describ√≠ tu problema" className="flex-1 rounded-xl border border-black/20 px-3 py-2 text-sm" />
+                <input value={assistantInput} onChange={(e) => setAssistantInput(e.target.value)} placeholder="Describí tu problema" className="flex-1 rounded-xl border border-black/20 px-3 py-2 text-sm" />
                 <button
                   onClick={() => {
                     const text = assistantInput.toLowerCase();
-                    if (text.includes('agua') || text.includes('ca√±o')) setSelectedService('Plomer√≠a');
-                    else if (text.includes('luz') || text.includes('t√©rmica') || text.includes('electric')) setSelectedService('Electricidad');
+                    if (text.includes('agua') || text.includes('caño')) setSelectedService('Plomería');
+                    else if (text.includes('luz') || text.includes('térmica') || text.includes('electric')) setSelectedService('Electricidad');
                     else if (text.includes('gas') || text.includes('calef')) setSelectedService('Gas');
                     else if (text.includes('aire')) setSelectedService('Aire acondicionado');
                     else if (text.includes('pint')) setSelectedService('Pintura');
-                    else if (text.includes('mueble') || text.includes('puerta')) setSelectedService('Carpinter√≠a');
+                    else if (text.includes('mueble') || text.includes('puerta')) setSelectedService('Carpintería');
                     else if (text.includes('pileta')) setSelectedService('Piletero');
                     setAssistantMessage('Te mostramos profesionales que pueden ayudarte.');
                     setTimeout(() => document.getElementById('profesionales')?.scrollIntoView({ behavior: 'smooth' }), 200);
@@ -1133,10 +1122,10 @@ export default function HomeFixPage() {
               </div>
 
               <div className="min-h-[120px] rounded-2xl bg-black p-4 text-sm text-white">
-                <p>{assistantMessage || 'Eleg√≠ una duda frecuente y te orientamos con el rubro correcto.'}</p>
+                <p>{assistantMessage || 'Elegí una duda frecuente y te orientamos con el rubro correcto.'}</p>
                 <div className="mt-4 rounded-2xl bg-white/10 p-3">
-                  <p className="text-sm font-semibold">¬øTe gustar√≠a hablar con una persona?</p>
-                  <p className="mt-1 text-xs text-white/75">Si todav√≠a ten√©s dudas, pod√©s hablar directo con nosotros por WhatsApp.</p>
+                  <p className="text-sm font-semibold">¿Te gustaría hablar con una persona?</p>
+                  <p className="mt-1 text-xs text-white/75">Si todavía tenés dudas, podés hablar directo con nosotros por WhatsApp.</p>
                   <a href={creatorWhatsappLink} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-sm font-semibold text-black">Hablar con una persona</a>
                 </div>
               </div>
@@ -1151,4 +1140,3 @@ export default function HomeFixPage() {
     </div>
   );
 }
-
