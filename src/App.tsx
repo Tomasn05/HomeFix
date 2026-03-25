@@ -635,9 +635,9 @@ export default function HomeFixPage() {
                 <button type="submit" className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">{authMode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
               </form>
 
-              <div className="mt-4 rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/65">
-                Usuarios guardados en Firestore y verificación de email activada.
-              </div>
+              <p className="mt-4 text-center text-sm text-black/55">
+  Verificá tu email para activar tu cuenta.
+</p>
             </div>
           </div>
         )}
