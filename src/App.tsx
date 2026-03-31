@@ -8,7 +8,7 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import { addDoc, collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 
 const BASE_SERVICES = [
   {
@@ -166,7 +166,7 @@ export default function HomeFixPage() {
   });
 
   const [addedWorkers, setAddedWorkers] = useState([]);
-  const [savedReviews, setSavedReviews] = useState([]);
+  const [allReviews, setAllReviews] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
   const [showAdminInput, setShowAdminInput] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
@@ -223,6 +223,69 @@ export default function HomeFixPage() {
   };
 
   const creatorWhatsappLink = `https://wa.me/${formatPhoneForWhatsApp(creatorProfile.phone)}`;
+
+  const refreshWorkers = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'workers'));
+      const workers = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
+      }));
+      setAddedWorkers(workers);
+      return workers;
+    } catch (error) {
+      console.error('Error cargando workers:', error);
+      return [];
+    }
+  };
+
+  const refreshAllReviews = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'reviews'));
+      const reviews = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data(),
+      }));
+      setAllReviews(reviews);
+      return reviews;
+    } catch (error) {
+      console.error('Error cargando reseñas:', error);
+      return [];
+    }
+  };
+
+  const getRatingStats = (pro, reviewsSource = allReviews) => {
+    const workerId = buildWorkerId(pro);
+    const realReviews = reviewsSource.filter((r) => r.workerId === workerId);
+
+    if (realReviews.length > 0) {
+      const average = realReviews.reduce((sum, r) => sum + Number(r.stars || 0), 0) / realReviews.length;
+      return {
+        average: average.toFixed(1),
+        count: realReviews.length,
+      };
+    }
+
+    return {
+      average: String(pro.rating || 'Nuevo'),
+      count: Number(pro.reviews || 0),
+    };
+  };
+
+  const syncWorkerRatingInFirestore = async (pro, reviewsSource = null) => {
+    if (!pro?.id) return;
+
+    try {
+      const reviews = reviewsSource || allReviews;
+      const stats = getRatingStats(pro, reviews);
+      await updateDoc(doc(db, 'workers', pro.id), {
+        rating: stats.average,
+        reviews: stats.count,
+      });
+    } catch (error) {
+      console.error('Error actualizando rating del profesional:', error);
+    }
+  };
 
   const getSmartMessage = (pro, service) => {
     const base = `Hola ${pro.name}, te encontré en HomeFix.`;
@@ -281,6 +344,18 @@ export default function HomeFixPage() {
         displayName: profileForm.name,
         photoURL: profileForm.photoUrl,
       });
+
+      await setDoc(
+        doc(db, 'users', auth.currentUser.uid),
+        {
+          name: profileForm.name || '',
+          email: profileForm.email || auth.currentUser.email || '',
+          photoUrl: profileForm.photoUrl || '',
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
       setCurrentUser({ ...auth.currentUser, displayName: profileForm.name, photoURL: profileForm.photoUrl });
       alert('Perfil actualizado');
     } catch (error) {
@@ -363,8 +438,53 @@ export default function HomeFixPage() {
     setAddedWorkers((prev) => prev.map((worker) => (worker.id === workerId ? { ...worker, [field]: value } : worker)));
   };
 
-  const removeWorker = (workerId) => {
-    setAddedWorkers((prev) => prev.filter((worker) => worker.id !== workerId));
+  const saveWorkerEdits = async (workerId) => {
+    const worker = addedWorkers.find((item) => item.id === workerId);
+    if (!worker) return;
+
+    const phoneDigits = String(worker.contact || '').replace(/[^0-9]/g, '').slice(0, 10);
+
+    if (!worker.name?.trim() || !worker.role?.trim()) {
+      alert('Completá nombre y especialidad.');
+      return;
+    }
+
+    if (phoneDigits.length !== 10) {
+      alert('El teléfono debe tener 10 dígitos.');
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'workers', workerId), {
+        name: worker.name,
+        role: worker.role,
+        area: worker.area,
+        contact: phoneDigits,
+        email: worker.email || '',
+        photoUrl: worker.photoUrl || '',
+        about: worker.about || '',
+        availability: worker.availability || 'Disponible ahora',
+      });
+
+      await refreshWorkers();
+      setEditingWorkerId(null);
+      alert('Profesional actualizado');
+    } catch (error) {
+      console.error(error);
+      alert('Error guardando cambios del profesional');
+    }
+  };
+
+  const removeWorker = async (workerId) => {
+    try {
+      await deleteDoc(doc(db, 'workers', workerId));
+      setAddedWorkers((prev) => prev.filter((worker) => worker.id !== workerId));
+      if (editingWorkerId === workerId) setEditingWorkerId(null);
+      alert('Profesional eliminado');
+    } catch (error) {
+      console.error(error);
+      alert('Error eliminando profesional');
+    }
   };
 
   const findWorkerIndex = (pro) => {
@@ -393,19 +513,8 @@ export default function HomeFixPage() {
     return clonedWorker.id;
   };
 
-  const loadReviewsForWorker = async (pro) => {
-    try {
-      const workerId = buildWorkerId(pro);
-      const q = query(collection(db, 'reviews'), where('workerId', '==', workerId));
-      const snapshot = await getDocs(q);
-      const reviews = snapshot.docs.map((docItem) => ({
-        id: docItem.id,
-        ...docItem.data(),
-      }));
-      setSavedReviews(reviews);
-    } catch (error) {
-      console.error('Error cargando reseñas del trabajador:', error);
-    }
+  const loadReviewsForWorker = async () => {
+    await refreshAllReviews();
   };
 
   const loadMyReviews = async (userArg = currentUser) => {
@@ -449,7 +558,9 @@ export default function HomeFixPage() {
       setReviewText('');
       setReviewFilter('all');
 
-      await loadReviewsForWorker(pro);
+      const reviews = await refreshAllReviews();
+      await syncWorkerRatingInFirestore(pro, reviews);
+      await refreshWorkers();
       await loadMyReviews();
 
       alert('Reseña guardada correctamente');
@@ -461,7 +572,7 @@ export default function HomeFixPage() {
 
   const getReviewsForProfessional = (pro) => {
     const workerId = buildWorkerId(pro);
-    const list = savedReviews.filter((r) => r.workerId === workerId);
+    const list = allReviews.filter((r) => r.workerId === workerId);
 
     if (list.length === 0) {
       return [
@@ -476,20 +587,8 @@ export default function HomeFixPage() {
   };
 
   useEffect(() => {
-    const fetchWorkers = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, 'workers'));
-        const workers = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setAddedWorkers(workers);
-      } catch (error) {
-        console.error('Error cargando workers:', error);
-      }
-    };
-
-    fetchWorkers();
+    refreshWorkers();
+    refreshAllReviews();
   }, []);
 
   useEffect(() => {
@@ -538,14 +637,7 @@ export default function HomeFixPage() {
 
     try {
       await addDoc(collection(db, 'workers'), workerToSave);
-
-      const snapshot = await getDocs(collection(db, 'workers'));
-      const workers = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setAddedWorkers(workers);
+      await refreshWorkers();
       setNewWorker({ name: '', role: 'Plomería', area: 'Capital', contact: '', email: '', photoUrl: '', about: '' });
       setNewWorkerFileInputKey((prev) => prev + 1);
       alert('Profesional guardado en la nube 🚀');
@@ -720,11 +812,7 @@ export default function HomeFixPage() {
                     <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{selectedProfessional.name}</h3>
                     <p className="mt-2 text-lg text-black/70">{selectedProfessional.role}</p>
                     <div className="mt-4 flex flex-wrap gap-3 text-sm">
-                      <span className="rounded-full border border-black px-4 py-2">⭐ {(() => {
-                        const reviews = getReviewsForProfessional(selectedProfessional);
-                        const avg = reviews.length ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1) : selectedProfessional.rating;
-                        return avg;
-                      })()}</span>
+                      <span className="rounded-full border border-black px-4 py-2">⭐ {getRatingStats(selectedProfessional).average}</span>
                       <span className="rounded-full border border-black px-4 py-2">📍 {selectedProfessional.area}</span>
                       <span className="rounded-full border border-black px-4 py-2">⏰ {selectedProfessional.availability}</span>
                     </div>
@@ -791,7 +879,7 @@ export default function HomeFixPage() {
                       <p><span className="font-semibold text-white">Contacto:</span> {formatPhoneDisplay(selectedProfessional.contact)}</p>
                       {selectedProfessional.email && <p><span className="font-semibold text-white">Email:</span> {selectedProfessional.email}</p>}
                       <p><span className="font-semibold text-white">Precio:</span> Consultar precio</p>
-                      <p><span className="font-semibold text-white">Opiniones:</span> {getReviewsForProfessional(selectedProfessional).length} reseñas</p>
+                      <p><span className="font-semibold text-white">Opiniones:</span> {getRatingStats(selectedProfessional).count} reseñas</p>
                     </div>
                     <button onClick={() => openWhatsApp(selectedProfessional.contact, getSmartMessage(selectedProfessional, selectedService))} className="mt-6 w-full rounded-2xl bg-white px-4 py-3 font-semibold text-black">Contactar por WhatsApp</button>
                   </div>
@@ -898,7 +986,8 @@ export default function HomeFixPage() {
           <div className="grid gap-6 lg:grid-cols-3">
             {processedWorkers.map((pro) => {
               const reviews = getReviewsForProfessional(pro);
-              const avg = reviews.length ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1) : (pro.rating || 'Nuevo');
+              const stats = getRatingStats(pro);
+              const avg = stats.average;
               return (
                 <div key={`${pro.name}-${pro.contact}`} className="rounded-3xl border border-black p-6 shadow-sm transition hover:shadow-xl">
                   <div className="mb-2 flex gap-2">
@@ -915,7 +1004,7 @@ export default function HomeFixPage() {
                   </div>
 
                   <div className="space-y-3 text-sm text-black/75">
-                    <p><span className="font-semibold text-black">Reseñas:</span> {reviews.length} opiniones</p>
+                    <p><span className="font-semibold text-black">Reseñas:</span> {stats.count} opiniones</p>
                     <p><span className="font-semibold text-black">Zona:</span> {pro.area}</p>
                     <p><span className="font-semibold text-black">Disponibilidad:</span> {pro.availability || 'Disponible ahora'}</p>
                     <p><span className="font-semibold text-black">Contacto:</span> {formatPhoneDisplay(pro.contact)}</p>
@@ -1145,6 +1234,14 @@ export default function HomeFixPage() {
                                 className={`rounded-full px-4 py-2 text-sm font-semibold text-white ${worker.availability === 'Disponible ahora' ? 'bg-green-500' : 'bg-red-500'}`}
                               >
                                 {worker.availability === 'Disponible ahora' ? 'Disponible ahora' : 'No disponible'}
+                              </button>
+                            </div>
+                            <div className="mt-2 md:col-span-2">
+                              <button
+                                onClick={() => saveWorkerEdits(worker.id)}
+                                className="rounded bg-black px-4 py-2 text-sm font-semibold text-white"
+                              >
+                                Guardar cambios
                               </button>
                             </div>
                           </div>
