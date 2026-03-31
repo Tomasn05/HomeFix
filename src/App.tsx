@@ -8,7 +8,17 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import { addDoc, collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
 
 const BASE_SERVICES = [
   {
@@ -130,6 +140,16 @@ function buildWorkerId(pro) {
   return pro.id || `${pro.name}-${String(pro.contact || '').replace(/[^0-9]/g, '')}`;
 }
 
+function normalizeErrorMessage(error) {
+  const code = error?.code || '';
+  const message = error?.message || 'Error desconocido';
+
+  if (code.includes('permission-denied')) return 'Firebase bloqueó la acción. Revisá Firestore Rules y que estés logueado.';
+  if (code.includes('unauthenticated')) return 'Tenés que iniciar sesión para hacer esta acción.';
+  if (code.includes('network-request-failed')) return 'Falló la conexión. Revisá internet y volvé a probar.';
+  return message;
+}
+
 export default function HomeFixPage() {
   const [selectedService, setSelectedService] = useState('Gas');
   const [selectedProfessional, setSelectedProfessional] = useState(null);
@@ -178,8 +198,18 @@ export default function HomeFixPage() {
   const [editingWorkerId, setEditingWorkerId] = useState(null);
   const [reviewStars, setReviewStars] = useState(5);
   const [reviewText, setReviewText] = useState('');
-  const [tempReviews, setTempReviews] = useState({});
   const [reviewFilter, setReviewFilter] = useState('all');
+  const [isSavingWorker, setIsSavingWorker] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  const refreshWorkers = async () => {
+    const snapshot = await getDocs(collection(db, 'workers'));
+    const workers = snapshot.docs.map((docItem) => ({
+      id: docItem.id,
+      ...docItem.data(),
+    }));
+    setAddedWorkers(workers);
+  };
 
   const services = useMemo(() => {
     return BASE_SERVICES.map((service) => {
@@ -270,21 +300,41 @@ export default function HomeFixPage() {
       await signOut(auth);
       alert('Sesión cerrada');
     } catch (error) {
-      alert(error.message);
+      alert(normalizeErrorMessage(error));
     }
   };
 
   const handleProfileSave = async () => {
-    if (!auth.currentUser) return;
+    if (!auth.currentUser) {
+      alert('Tenés que iniciar sesión.');
+      return;
+    }
+
+    setIsSavingProfile(true);
     try {
       await updateProfile(auth.currentUser, {
         displayName: profileForm.name,
         photoURL: profileForm.photoUrl,
       });
-      setCurrentUser({ ...auth.currentUser, displayName: profileForm.name, photoURL: profileForm.photoUrl });
+
+      await setDoc(
+        doc(db, 'users', auth.currentUser.uid),
+        {
+          name: profileForm.name || '',
+          email: profileForm.email || auth.currentUser.email || '',
+          photoUrl: profileForm.photoUrl || '',
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
+      await auth.currentUser.reload();
+      setCurrentUser(auth.currentUser);
       alert('Perfil actualizado');
     } catch (error) {
-      alert(error.message);
+      alert(normalizeErrorMessage(error));
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -298,11 +348,7 @@ export default function HomeFixPage() {
           return;
         }
 
-        const result = await createUserWithEmailAndPassword(
-          auth,
-          authForm.email,
-          authForm.password
-        );
+        const result = await createUserWithEmailAndPassword(auth, authForm.email, authForm.password);
 
         if (authForm.name.trim()) {
           await updateProfile(result.user, {
@@ -322,11 +368,7 @@ export default function HomeFixPage() {
         alert('Cuenta creada. Verificá tu email antes de usar la app 📩');
         closeAuthModal();
       } else {
-        const result = await signInWithEmailAndPassword(
-          auth,
-          authForm.email,
-          authForm.password
-        );
+        const result = await signInWithEmailAndPassword(auth, authForm.email, authForm.password);
 
         await result.user.reload();
 
@@ -340,7 +382,7 @@ export default function HomeFixPage() {
         closeAuthModal();
       }
     } catch (error) {
-      alert(error.message);
+      alert(normalizeErrorMessage(error));
     }
   };
 
@@ -363,8 +405,64 @@ export default function HomeFixPage() {
     setAddedWorkers((prev) => prev.map((worker) => (worker.id === workerId ? { ...worker, [field]: value } : worker)));
   };
 
-  const removeWorker = (workerId) => {
-    setAddedWorkers((prev) => prev.filter((worker) => worker.id !== workerId));
+  const saveWorkerChanges = async (worker) => {
+    if (!currentUser) {
+      alert('Tenés que iniciar sesión para guardar cambios.');
+      return;
+    }
+
+    if (!worker?.id) {
+      alert('Ese profesional no tiene id de Firebase para guardar cambios.');
+      return;
+    }
+
+    const phoneDigits = String(worker.contact || '').replace(/[^0-9]/g, '').slice(-10);
+
+    if (!String(worker.name || '').trim()) {
+      alert('Completá el nombre del profesional.');
+      return;
+    }
+
+    if (phoneDigits.length !== 10) {
+      alert('El teléfono debe tener 10 dígitos.');
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'workers', worker.id), {
+        name: worker.name || '',
+        role: worker.role || '',
+        area: worker.area || 'Capital',
+        contact: phoneDigits,
+        email: worker.email || '',
+        photoUrl: worker.photoUrl || '',
+        about: worker.about || '',
+        availability: worker.availability || 'Disponible ahora',
+        updatedAt: new Date().toISOString(),
+      });
+
+      await refreshWorkers();
+      setEditingWorkerId(null);
+      alert('Profesional actualizado');
+    } catch (error) {
+      alert(normalizeErrorMessage(error));
+    }
+  };
+
+  const removeWorker = async (workerId) => {
+    if (!currentUser) {
+      alert('Tenés que iniciar sesión para eliminar un profesional.');
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'workers', workerId));
+      setAddedWorkers((prev) => prev.filter((worker) => worker.id !== workerId));
+      if (editingWorkerId === workerId) setEditingWorkerId(null);
+      alert('Profesional eliminado');
+    } catch (error) {
+      alert(normalizeErrorMessage(error));
+    }
   };
 
   const findWorkerIndex = (pro) => {
@@ -372,11 +470,16 @@ export default function HomeFixPage() {
     return addedWorkers.findIndex((w) => w.id === pro.id || String(w.contact || '').replace(/[^0-9]/g, '').slice(-10) === normalized);
   };
 
-  const ensureEditableWorker = (pro) => {
+  const ensureEditableWorker = async (pro) => {
     const existingIndex = findWorkerIndex(pro);
     if (existingIndex !== -1) return addedWorkers[existingIndex]?.id || null;
+
+    if (!currentUser) {
+      alert('Para editar ese perfil primero iniciá sesión.');
+      return null;
+    }
+
     const clonedWorker = {
-      id: safeUuid(),
       name: pro.name || '',
       role: pro.role || selectedService,
       area: pro.area || 'Capital',
@@ -387,10 +490,18 @@ export default function HomeFixPage() {
       rating: pro.rating || 'Nuevo',
       reviews: pro.reviews || 0,
       availability: pro.availability || 'Disponible ahora',
-      reviewEntries: tempReviews[pro.contact] || [],
+      createdAt: new Date().toISOString(),
+      createdBy: currentUser.uid,
     };
-    setAddedWorkers((prev) => [...prev, clonedWorker]);
-    return clonedWorker.id;
+
+    try {
+      const ref = await addDoc(collection(db, 'workers'), clonedWorker);
+      await refreshWorkers();
+      return ref.id;
+    } catch (error) {
+      alert(normalizeErrorMessage(error));
+      return null;
+    }
   };
 
   const loadReviewsForWorker = async (pro) => {
@@ -455,7 +566,7 @@ export default function HomeFixPage() {
       alert('Reseña guardada correctamente');
     } catch (error) {
       console.error(error);
-      alert('Error guardando la reseña');
+      alert(normalizeErrorMessage(error));
     }
   };
 
@@ -478,12 +589,7 @@ export default function HomeFixPage() {
   useEffect(() => {
     const fetchWorkers = async () => {
       try {
-        const snapshot = await getDocs(collection(db, 'workers'));
-        const workers = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setAddedWorkers(workers);
+        await refreshWorkers();
       } catch (error) {
         console.error('Error cargando workers:', error);
       }
@@ -520,7 +626,20 @@ export default function HomeFixPage() {
   const addWorker = async () => {
     const phoneDigits = String(newWorker.contact || '').replace(/[^0-9]/g, '');
 
-    if (!newWorker.name.trim() || !newWorker.role.trim()) return;
+    if (!currentUser) {
+      alert('Primero tenés que iniciar sesión para guardar profesionales.');
+      return;
+    }
+
+    if (!newWorker.name.trim()) {
+      alert('Completá el nombre del profesional.');
+      return;
+    }
+
+    if (!newWorker.role.trim()) {
+      alert('Elegí un rubro.');
+      return;
+    }
 
     if (phoneDigits.length !== 10) {
       alert('El teléfono debe tener 10 dígitos.');
@@ -534,24 +653,22 @@ export default function HomeFixPage() {
       reviews: 0,
       availability: 'Disponible ahora',
       reviewEntries: [],
+      createdAt: new Date().toISOString(),
+      createdBy: currentUser.uid,
     };
 
+    setIsSavingWorker(true);
     try {
       await addDoc(collection(db, 'workers'), workerToSave);
-
-      const snapshot = await getDocs(collection(db, 'workers'));
-      const workers = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setAddedWorkers(workers);
+      await refreshWorkers();
       setNewWorker({ name: '', role: 'Plomería', area: 'Capital', contact: '', email: '', photoUrl: '', about: '' });
       setNewWorkerFileInputKey((prev) => prev + 1);
-      alert('Profesional guardado en la nube 🚀');
+      alert('Profesional guardado en Firebase 🚀');
     } catch (error) {
       console.error(error);
-      alert('Error guardando en Firebase');
+      alert(normalizeErrorMessage(error));
+    } finally {
+      setIsSavingWorker(false);
     }
   };
 
@@ -666,7 +783,6 @@ export default function HomeFixPage() {
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/45">{authMode === 'login' ? 'Ingreso' : 'Registro'}</p>
                   <h3 className="mt-2 text-3xl font-black tracking-tight">{authMode === 'login' ? 'Entrá a HomeFix' : 'Creá tu cuenta'}</h3>
-                  
                 </div>
                 <button onClick={closeAuthModal} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">✕</button>
               </div>
@@ -697,8 +813,6 @@ export default function HomeFixPage() {
                 )}
                 <button type="submit" className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">{authMode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
               </form>
-
-              
             </div>
           </div>
         )}
@@ -732,8 +846,9 @@ export default function HomeFixPage() {
                   <button onClick={() => setSelectedProfessional(null)} className="rounded-2xl border border-black px-5 py-3 font-semibold">Cerrar perfil</button>
                   {isCreatorMode && (
                     <button
-                      onClick={() => {
-                        const workerId = ensureEditableWorker(selectedProfessional);
+                      onClick={async () => {
+                        const workerId = await ensureEditableWorker(selectedProfessional);
+                        if (!workerId) return;
                         setEditingWorkerId(workerId);
                         setSelectedProfessional(null);
                         setIsCreatorMode(true);
@@ -1015,8 +1130,8 @@ export default function HomeFixPage() {
                           reader.readAsDataURL(file);
                         }}
                       />
-                      <button onClick={handleProfileSave} className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">
-                        Guardar cambios
+                      <button onClick={handleProfileSave} disabled={isSavingProfile} className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white disabled:opacity-60">
+                        {isSavingProfile ? 'Guardando...' : 'Guardar cambios'}
                       </button>
                     </div>
                   </div>
@@ -1053,6 +1168,11 @@ export default function HomeFixPage() {
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Panel privado del creador</p>
                 <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Tu perfil de creador</h3>
                 <p className="mt-3 max-w-2xl text-black/70">Gestioná tu perfil y cargá profesionales manualmente.</p>
+                {!currentUser && (
+                  <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    Tenés modo creador activo, pero todavía no iniciaste sesión. Para guardar en Firebase primero entrá con tu cuenta.
+                  </div>
+                )}
               </div>
 
               <div className="grid gap-6 lg:grid-cols-2">
@@ -1092,7 +1212,7 @@ export default function HomeFixPage() {
                     }}
                   />
                   <textarea placeholder="Sobre este profesional" value={newWorker.about} onChange={(e) => setNewWorker({ ...newWorker, about: e.target.value })} className="mb-2 min-h-[96px] w-full rounded border p-2" />
-                  <button onClick={addWorker} className="rounded bg-black px-4 py-2 text-white">Guardar</button>
+                  <button onClick={addWorker} disabled={isSavingWorker} className="rounded bg-black px-4 py-2 text-white disabled:opacity-60">{isSavingWorker ? 'Guardando...' : 'Guardar'}</button>
 
                   <div className="mt-4 space-y-4">
                     {addedWorkers.length === 0 && (
@@ -1144,6 +1264,9 @@ export default function HomeFixPage() {
                               >
                                 {worker.availability === 'Disponible ahora' ? 'Disponible ahora' : 'No disponible'}
                               </button>
+                            </div>
+                            <div className="md:col-span-2">
+                              <button onClick={() => saveWorkerChanges(worker)} className="rounded bg-black px-4 py-2 text-white">Guardar cambios</button>
                             </div>
                           </div>
                         )}
