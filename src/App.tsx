@@ -8,45 +8,109 @@ import {
   signOut,
   updateProfile,
 } from 'firebase/auth';
-import { addDoc, collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
+
+type AuthMode = 'login' | 'register';
+type AuthRole = 'cliente' | 'profesional';
+type SortMode = 'rating' | 'available';
+type ReviewFilter = 'all' | 'highest' | 'lowest';
+
+type Worker = {
+  id?: string;
+  name: string;
+  role: string;
+  area: string;
+  contact: string;
+  email?: string;
+  photoUrl?: string;
+  about?: string;
+  rating?: string | number;
+  reviews?: number;
+  availability?: string;
+  reviewEntries?: unknown[];
+  createdAt?: string;
+  createdBy?: string;
+  updatedAt?: string;
+};
+
+type Review = {
+  id: string;
+  workerId: string;
+  workerName?: string;
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  stars: number;
+  text?: string;
+  createdAt?: string;
+};
+
+type CreatorProfile = {
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  city: string;
+  bio: string;
+  updatedAt?: string;
+  updatedBy?: string;
+};
 
 const SERVICE_CATEGORIES = [
   {
     name: 'Plomería',
-    icon: '🔧',
     desc: 'Pérdidas, destapes, instalaciones y reparaciones.',
+    image:
+      'https://images.unsplash.com/photo-1621905252507-b35492ccf7c0?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Electricidad',
-    icon: '⚡',
     desc: 'Arreglos, cableado, luces, tableros y urgencias.',
+    image:
+      'https://images.unsplash.com/photo-1555963966-b7ae5404b6ed?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Gas',
-    icon: '🔥',
     desc: 'Gasistas matriculados para revisiones e instalaciones.',
+    image:
+      'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Aire acondicionado',
-    icon: '❄️',
     desc: 'Instalación, mantenimiento y service técnico.',
+    image:
+      'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Pintura',
-    icon: '🎨',
     desc: 'Interior, exterior, retoques y trabajos completos.',
+    image:
+      'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Carpintería',
-    icon: '🪚',
     desc: 'Muebles, arreglos, puertas y trabajos a medida.',
+    image:
+      'https://images.unsplash.com/photo-1513467655676-561b7d489a88?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Piletero',
-    icon: '🏊',
     desc: 'Mantenimiento, limpieza y tratamiento de piscinas.',
+    image:
+      'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1400&q=80',
   },
-];
+] as const;
 
 const HELP_SUGGESTIONS = [
   { title: 'Pierde agua una canilla', service: 'Plomería', answer: 'Parece un problema de plomería. Te mostramos plomeros disponibles.' },
@@ -56,15 +120,15 @@ const HELP_SUGGESTIONS = [
   { title: 'Quiero pintar mi casa', service: 'Pintura', answer: 'Te mostramos pintores disponibles.' },
   { title: 'Necesito arreglar un mueble', service: 'Carpintería', answer: 'Te mostramos carpinteros.' },
   { title: 'Mantenimiento de pileta', service: 'Piletero', answer: 'Te mostramos pileteros disponibles.' },
-];
+] as const;
 
 const MENDOZA_DEPARTMENTS = [
   'Capital', 'Godoy Cruz', 'Guaymallén', 'Las Heras', 'Luján de Cuyo', 'Maipú',
   'Junín', 'Rivadavia', 'San Martín', 'Santa Rosa', 'La Paz', 'Lavalle',
   'Tunuyán', 'Tupungato', 'San Carlos', 'San Rafael', 'General Alvear', 'Malargüe',
-];
+] as const;
 
-function initials(name) {
+function initials(name: string) {
   return String(name || '')
     .split(' ')
     .map((part) => part[0])
@@ -72,7 +136,7 @@ function initials(name) {
     .join('');
 }
 
-function matchesService(role, serviceName) {
+function matchesService(role: string, serviceName: string) {
   const roleText = String(role || '').toLowerCase();
   const name = String(serviceName || '').toLowerCase();
   if (name === 'plomería') return roleText.includes('plom');
@@ -90,27 +154,27 @@ function safeUuid() {
   return `worker-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
-function buildWorkerId(pro) {
+function buildWorkerId(pro: Worker) {
   return pro.id || `${pro.name}-${String(pro.contact || '').replace(/[^0-9]/g, '')}`;
 }
 
 export default function HomeFixPage() {
   const [selectedService, setSelectedService] = useState('Gas');
-  const [selectedProfessional, setSelectedProfessional] = useState(null);
+  const [selectedProfessional, setSelectedProfessional] = useState<Worker | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [assistantMessage, setAssistantMessage] = useState('');
   const [assistantInput, setAssistantInput] = useState('');
   const [isCreatorMode, setIsCreatorMode] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('login');
+  const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [authRole, setAuthRole] = useState('cliente');
+  const [authRole, setAuthRole] = useState<AuthRole>('cliente');
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '', confirmPassword: '' });
-  const [currentUser, setCurrentUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [profileForm, setProfileForm] = useState({ name: '', email: '', photoUrl: '' });
-  const profileRef = useRef(null);
+  const profileRef = useRef<HTMLElement | null>(null);
 
-  const [creatorProfile, setCreatorProfile] = useState({
+  const [creatorProfile, setCreatorProfile] = useState<CreatorProfile>({
     name: 'Tomás Notti',
     role: 'Creador de HomeFix',
     email: 'homefix@demo.com',
@@ -119,7 +183,7 @@ export default function HomeFixPage() {
     bio: 'Estoy construyendo HomeFix para conectar clientes con profesionales confiables de forma simple y rápida.',
   });
 
-  const [newWorker, setNewWorker] = useState({
+  const [newWorker, setNewWorker] = useState<Worker>({
     name: '',
     role: 'Plomería',
     area: 'Capital',
@@ -129,21 +193,20 @@ export default function HomeFixPage() {
     about: '',
   });
 
-  const [addedWorkers, setAddedWorkers] = useState([]);
-  const [savedReviews, setSavedReviews] = useState([]);
-  const [myReviews, setMyReviews] = useState([]);
+  const [addedWorkers, setAddedWorkers] = useState<Worker[]>([]);
+  const [savedReviews, setSavedReviews] = useState<Review[]>([]);
+  const [myReviews, setMyReviews] = useState<Review[]>([]);
   const [showAdminInput, setShowAdminInput] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminClickCount, setAdminClickCount] = useState(0);
   const [newWorkerFileInputKey, setNewWorkerFileInputKey] = useState(0);
   const [filterAvailable, setFilterAvailable] = useState(false);
   const [filterZone, setFilterZone] = useState('all');
-  const [sortMode, setSortMode] = useState('rating');
-  const [editingWorkerId, setEditingWorkerId] = useState(null);
+  const [sortMode, setSortMode] = useState<SortMode>('rating');
+  const [editingWorkerId, setEditingWorkerId] = useState<string | null>(null);
   const [reviewStars, setReviewStars] = useState(5);
   const [reviewText, setReviewText] = useState('');
-  const [tempReviews, setTempReviews] = useState({});
-  const [reviewFilter, setReviewFilter] = useState('all');
+  const [reviewFilter, setReviewFilter] = useState<ReviewFilter>('all');
 
   const services = useMemo(() => {
     return SERVICE_CATEGORIES.map((service) => {
@@ -158,7 +221,7 @@ export default function HomeFixPage() {
     let list = [...(activeService?.workers || [])];
     if (filterAvailable) list = list.filter((w) => String(w.availability || '').toLowerCase().includes('disponible ahora'));
     if (filterZone !== 'all') list = list.filter((w) => w.area === filterZone);
-    if (sortMode === 'rating') list.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
+    if (sortMode === 'rating') list.sort((a, b) => parseFloat(String(b.rating || 0)) - parseFloat(String(a.rating || 0)));
     if (sortMode === 'available') {
       list.sort((a, b) => {
         const aNow = String(a.availability || '').toLowerCase().includes('disponible ahora');
@@ -171,7 +234,7 @@ export default function HomeFixPage() {
 
   const totalProfessionals = addedWorkers.length;
 
-  const formatPhoneForWhatsApp = (contact) => {
+  const formatPhoneForWhatsApp = (contact: string) => {
     const digits = String(contact || '').replace(/[^0-9]/g, '');
     if (digits.length === 10) return `549${digits}`;
     if (digits.length === 12 && digits.startsWith('54')) return digits;
@@ -179,7 +242,7 @@ export default function HomeFixPage() {
     return digits;
   };
 
-  const formatPhoneDisplay = (contact) => {
+  const formatPhoneDisplay = (contact: string) => {
     const digits = String(contact || '').replace(/[^0-9]/g, '');
     const local = digits.length === 10 ? digits : digits.startsWith('549') ? digits.slice(3) : digits.startsWith('54') ? digits.slice(2) : digits;
     if (local.length === 10) return `+54 9 ${local.slice(0, 3)} ${local.slice(3, 6)}-${local.slice(6)}`;
@@ -188,7 +251,7 @@ export default function HomeFixPage() {
 
   const creatorWhatsappLink = `https://wa.me/${formatPhoneForWhatsApp(creatorProfile.phone)}`;
 
-  const getSmartMessage = (pro, service) => {
+  const getSmartMessage = (pro: Worker, service: string) => {
     const base = `Hola ${pro.name}, te encontré en HomeFix.`;
     if (service === 'Plomería') return `${base} Tengo una pérdida de agua en casa, ¿podés ayudarme?`;
     if (service === 'Electricidad') return `${base} Estoy teniendo problemas eléctricos (salta la térmica / cortes).`;
@@ -200,7 +263,7 @@ export default function HomeFixPage() {
     return `${base} Quería consultarte por un trabajo.`;
   };
 
-  const openWhatsApp = (contact, message) => {
+  const openWhatsApp = (contact: string, message: string) => {
     const phone = formatPhoneForWhatsApp(contact);
     if (!phone) return;
     window.location.href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
@@ -213,7 +276,7 @@ export default function HomeFixPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const openAuthModal = (mode) => {
+  const openAuthModal = (mode: AuthMode) => {
     setAuthMode(mode);
     setAuthRole('cliente');
     setIsAuthOpen(true);
@@ -229,11 +292,35 @@ export default function HomeFixPage() {
     setIsMenuOpen(false);
   };
 
+  const loadWorkers = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, 'workers'));
+      const workers = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...(docItem.data() as Omit<Worker, 'id'>),
+      }));
+      setAddedWorkers(workers);
+    } catch (error) {
+      console.error('Error cargando workers:', error);
+    }
+  };
+
+  const loadCreatorProfile = async () => {
+    try {
+      const snapshot = await getDoc(doc(db, 'appSettings', 'creatorProfile'));
+      if (snapshot.exists()) {
+        setCreatorProfile((prev) => ({ ...prev, ...(snapshot.data() as CreatorProfile) }));
+      }
+    } catch (error) {
+      console.error('Error cargando perfil del creador:', error);
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
       alert('Sesión cerrada');
-    } catch (error) {
+    } catch (error: any) {
       alert(error.message);
     }
   };
@@ -245,14 +332,49 @@ export default function HomeFixPage() {
         displayName: profileForm.name,
         photoURL: profileForm.photoUrl,
       });
+
+      await setDoc(
+        doc(db, 'users', auth.currentUser.uid),
+        {
+          name: profileForm.name,
+          email: profileForm.email,
+          photoUrl: profileForm.photoUrl,
+          updatedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
       setCurrentUser({ ...auth.currentUser, displayName: profileForm.name, photoURL: profileForm.photoUrl });
       alert('Perfil actualizado');
-    } catch (error) {
+    } catch (error: any) {
       alert(error.message);
     }
   };
 
-  const handleAuthSubmit = async (e) => {
+  const saveCreatorProfile = async () => {
+    if (!auth.currentUser) {
+      alert('Tenés que iniciar sesión para guardar el perfil del creador.');
+      return;
+    }
+
+    try {
+      await setDoc(
+        doc(db, 'appSettings', 'creatorProfile'),
+        {
+          ...creatorProfile,
+          updatedAt: new Date().toISOString(),
+          updatedBy: auth.currentUser.uid,
+        },
+        { merge: true }
+      );
+      alert('Perfil del creador guardado');
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || 'Error guardando el perfil del creador');
+    }
+  };
+
+  const handleAuthSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
@@ -262,11 +384,7 @@ export default function HomeFixPage() {
           return;
         }
 
-        const result = await createUserWithEmailAndPassword(
-          auth,
-          authForm.email,
-          authForm.password
-        );
+        const result = await createUserWithEmailAndPassword(auth, authForm.email, authForm.password);
 
         if (authForm.name.trim()) {
           await updateProfile(result.user, {
@@ -286,12 +404,7 @@ export default function HomeFixPage() {
         alert('Cuenta creada. Verificá tu email antes de usar la app 📩');
         closeAuthModal();
       } else {
-        const result = await signInWithEmailAndPassword(
-          auth,
-          authForm.email,
-          authForm.password
-        );
-
+        const result = await signInWithEmailAndPassword(auth, authForm.email, authForm.password);
         await result.user.reload();
 
         if (!result.user.emailVerified) {
@@ -303,12 +416,12 @@ export default function HomeFixPage() {
         alert('Ingreso exitoso');
         closeAuthModal();
       }
-    } catch (error) {
+    } catch (error: any) {
       alert(error.message);
     }
   };
 
-  const scrollToSection = (id) => {
+  const scrollToSection = (id: string) => {
     setIsMenuOpen(false);
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -323,23 +436,69 @@ export default function HomeFixPage() {
     }
   };
 
-  const updateWorker = (workerId, field, value) => {
+  const updateWorker = (workerId: string, field: keyof Worker, value: string) => {
     setAddedWorkers((prev) => prev.map((worker) => (worker.id === workerId ? { ...worker, [field]: value } : worker)));
   };
 
-  const removeWorker = (workerId) => {
-    setAddedWorkers((prev) => prev.filter((worker) => worker.id !== workerId));
+  const saveEditedWorker = async (worker: Worker) => {
+    if (!auth.currentUser) {
+      alert('Tenés que iniciar sesión para guardar cambios.');
+      return;
+    }
+
+    if (!worker.id) {
+      alert('Este profesional no tiene un id válido.');
+      return;
+    }
+
+    try {
+      await updateDoc(doc(db, 'workers', worker.id), {
+        name: worker.name || '',
+        role: worker.role || '',
+        area: worker.area || '',
+        contact: String(worker.contact || '').replace(/[^0-9]/g, '').slice(0, 10),
+        email: worker.email || '',
+        photoUrl: worker.photoUrl || '',
+        about: worker.about || '',
+        availability: worker.availability || 'Disponible ahora',
+        updatedAt: new Date().toISOString(),
+      });
+      await loadWorkers();
+      setEditingWorkerId(null);
+      alert('Profesional actualizado');
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || 'Error actualizando profesional');
+    }
   };
 
-  const findWorkerIndex = (pro) => {
+  const removeWorker = async (workerId?: string) => {
+    if (!workerId) return;
+    if (!auth.currentUser) {
+      alert('Tenés que iniciar sesión para eliminar profesionales.');
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'workers', workerId));
+      setAddedWorkers((prev) => prev.filter((worker) => worker.id !== workerId));
+      if (editingWorkerId === workerId) setEditingWorkerId(null);
+      alert('Profesional eliminado');
+    } catch (error: any) {
+      console.error(error);
+      alert(error.message || 'Error eliminando profesional');
+    }
+  };
+
+  const findWorkerIndex = (pro: Worker) => {
     const normalized = String(pro.contact || '').replace(/[^0-9]/g, '').slice(-10);
     return addedWorkers.findIndex((w) => w.id === pro.id || String(w.contact || '').replace(/[^0-9]/g, '').slice(-10) === normalized);
   };
 
-  const ensureEditableWorker = (pro) => {
+  const ensureEditableWorker = (pro: Worker) => {
     const existingIndex = findWorkerIndex(pro);
     if (existingIndex !== -1) return addedWorkers[existingIndex]?.id || null;
-    const clonedWorker = {
+    const clonedWorker: Worker = {
       id: safeUuid(),
       name: pro.name || '',
       role: pro.role || selectedService,
@@ -351,21 +510,21 @@ export default function HomeFixPage() {
       rating: pro.rating || 'Nuevo',
       reviews: pro.reviews || 0,
       availability: pro.availability || 'Disponible ahora',
-      reviewEntries: tempReviews[pro.contact] || [],
+      reviewEntries: [],
     };
     setAddedWorkers((prev) => [...prev, clonedWorker]);
     return clonedWorker.id;
   };
 
-  const loadReviewsForWorker = async (pro) => {
+  const loadReviewsForWorker = async (pro: Worker) => {
     try {
       const workerId = buildWorkerId(pro);
       const q = query(collection(db, 'reviews'), where('workerId', '==', workerId));
       const snapshot = await getDocs(q);
       const reviews = snapshot.docs.map((docItem) => ({
         id: docItem.id,
-        ...docItem.data(),
-      }));
+        ...(docItem.data() as Omit<Review, 'id'>),
+      })) as Review[];
       setSavedReviews(reviews);
     } catch (error) {
       console.error('Error cargando reseñas del trabajador:', error);
@@ -379,15 +538,15 @@ export default function HomeFixPage() {
       const snapshot = await getDocs(q);
       const reviews = snapshot.docs.map((docItem) => ({
         id: docItem.id,
-        ...docItem.data(),
-      }));
+        ...(docItem.data() as Omit<Review, 'id'>),
+      })) as Review[];
       setMyReviews(reviews);
     } catch (error) {
       console.error('Error cargando mis reseñas:', error);
     }
   };
 
-  const addReview = async (pro) => {
+  const addReview = async (pro: Worker) => {
     if (!reviewStars) return;
 
     if (!currentUser) {
@@ -408,14 +567,11 @@ export default function HomeFixPage() {
       };
 
       await addDoc(collection(db, 'reviews'), reviewData);
-
       setReviewStars(5);
       setReviewText('');
       setReviewFilter('all');
-
       await loadReviewsForWorker(pro);
       await loadMyReviews();
-
       alert('Reseña guardada correctamente');
     } catch (error) {
       console.error(error);
@@ -423,37 +579,17 @@ export default function HomeFixPage() {
     }
   };
 
-  const getReviewsForProfessional = (pro) => {
+  const getReviewsForProfessional = (pro: Worker) => {
     const workerId = buildWorkerId(pro);
     const list = savedReviews.filter((r) => r.workerId === workerId);
-
-    if (list.length === 0) {
-      return [
-        { id: 'seed-1', stars: 5, text: 'Muy buen servicio.' },
-        { id: 'seed-2', stars: 4, text: 'Llegó puntual y resolvió rápido.' },
-      ];
-    }
-
     if (reviewFilter === 'highest') return [...list].sort((a, b) => b.stars - a.stars);
     if (reviewFilter === 'lowest') return [...list].sort((a, b) => a.stars - b.stars);
     return list;
   };
 
   useEffect(() => {
-    const fetchWorkers = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, 'workers'));
-        const workers = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setAddedWorkers(workers);
-      } catch (error) {
-        console.error('Error cargando workers:', error);
-      }
-    };
-
-    fetchWorkers();
+    loadWorkers();
+    loadCreatorProfile();
   }, []);
 
   useEffect(() => {
@@ -484,7 +620,20 @@ export default function HomeFixPage() {
   const addWorker = async () => {
     const phoneDigits = String(newWorker.contact || '').replace(/[^0-9]/g, '');
 
-    if (!newWorker.name.trim() || !newWorker.role.trim()) return;
+    if (!currentUser) {
+      alert('Tenés que iniciar sesión para guardar profesionales.');
+      return;
+    }
+
+    if (!newWorker.name.trim()) {
+      alert('Completá el nombre del profesional.');
+      return;
+    }
+
+    if (!newWorker.role.trim()) {
+      alert('Elegí un rubro.');
+      return;
+    }
 
     if (phoneDigits.length !== 10) {
       alert('El teléfono debe tener 10 dígitos.');
@@ -498,36 +647,31 @@ export default function HomeFixPage() {
       reviews: 0,
       availability: 'Disponible ahora',
       reviewEntries: [],
+      createdAt: new Date().toISOString(),
+      createdBy: currentUser.uid,
     };
 
     try {
       await addDoc(collection(db, 'workers'), workerToSave);
-
-      const snapshot = await getDocs(collection(db, 'workers'));
-      const workers = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-
-      setAddedWorkers(workers);
+      await loadWorkers();
       setNewWorker({ name: '', role: 'Plomería', area: 'Capital', contact: '', email: '', photoUrl: '', about: '' });
       setNewWorkerFileInputKey((prev) => prev + 1);
-      alert('Profesional guardado en la nube 🚀');
-    } catch (error) {
+      alert('Profesional guardado en Firebase 🚀');
+    } catch (error: any) {
       console.error(error);
-      alert('Error guardando en Firebase');
+      alert(error.message || 'Error guardando en Firebase');
     }
   };
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-[#f6f4ef] text-black">
       {isCreatorMode && (
         <div className="fixed left-0 top-0 z-[60] w-full bg-black py-2 text-center text-sm font-semibold text-white">
           MODO CREADOR ACTIVADO
         </div>
       )}
 
-      <header className={`sticky ${isCreatorMode ? 'top-8' : 'top-0'} z-50 border-b border-black/10 bg-white/90 backdrop-blur`}>
+      <header className={`sticky ${isCreatorMode ? 'top-8' : 'top-0'} z-50 border-b border-black/10 bg-[#f6f4ef]/95 backdrop-blur`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div onClick={resetHome} className="flex cursor-pointer items-center gap-3 text-left">
             <div className="flex overflow-hidden rounded-3xl border-2 border-black shadow-lg">
@@ -630,7 +774,6 @@ export default function HomeFixPage() {
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/45">{authMode === 'login' ? 'Ingreso' : 'Registro'}</p>
                   <h3 className="mt-2 text-3xl font-black tracking-tight">{authMode === 'login' ? 'Entrá a HomeFix' : 'Creá tu cuenta'}</h3>
-                  <p className="mt-2 text-sm text-black/65">Esta pantalla ya está lista para conectarla con Firebase Auth.</p>
                 </div>
                 <button onClick={closeAuthModal} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">✕</button>
               </div>
@@ -661,108 +804,8 @@ export default function HomeFixPage() {
                 )}
                 <button type="submit" className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">{authMode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
               </form>
-
-              <div className="mt-4 rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/65">
-                Usuarios guardados en Firestore y verificación de email activada.
-              </div>
             </div>
           </div>
-        )}
-
-        {selectedProfessional && (
-          <section className="mx-auto max-w-7xl px-6 pt-10">
-            <div className="rounded-[2rem] border border-black bg-zinc-50 p-8 md:p-10">
-              <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="flex items-start gap-5">
-                  {selectedProfessional.photoUrl ? (
-                    <img src={selectedProfessional.photoUrl} alt={selectedProfessional.name} className="h-20 w-20 rounded-3xl border border-black object-cover" />
-                  ) : (
-                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-black text-3xl font-black text-white">{initials(selectedProfessional.name)}</div>
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Perfil del profesional</p>
-                    <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{selectedProfessional.name}</h3>
-                    <p className="mt-2 text-lg text-black/70">{selectedProfessional.role}</p>
-                    <div className="mt-4 flex flex-wrap gap-3 text-sm">
-                      <span className="rounded-full border border-black px-4 py-2">⭐ {(() => {
-                        const reviews = getReviewsForProfessional(selectedProfessional);
-                        const avg = reviews.length ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1) : selectedProfessional.rating;
-                        return avg;
-                      })()}</span>
-                      <span className="rounded-full border border-black px-4 py-2">📍 {selectedProfessional.area}</span>
-                      <span className="rounded-full border border-black px-4 py-2">⏰ {selectedProfessional.availability}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => setSelectedProfessional(null)} className="rounded-2xl border border-black px-5 py-3 font-semibold">Cerrar perfil</button>
-                  {isCreatorMode && (
-                    <button
-                      onClick={() => {
-                        const workerId = ensureEditableWorker(selectedProfessional);
-                        setEditingWorkerId(workerId);
-                        setSelectedProfessional(null);
-                        setIsCreatorMode(true);
-                        setTimeout(() => document.querySelector('[data-creator-panel]')?.scrollIntoView({ behavior: 'smooth' }), 100);
-                      }}
-                      className="rounded-2xl bg-black px-5 py-3 font-semibold text-white"
-                    >
-                      Editar
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="space-y-6">
-                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
-                    <h4 className="text-xl font-bold">Sobre este profesional</h4>
-                    <p className="mt-4 text-black/75">{selectedProfessional.about || 'Profesional verificado dentro de HomeFix con atención personalizada y coordinación directa con el cliente.'}</p>
-                  </div>
-
-                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <h4 className="text-xl font-bold">Reseñas</h4>
-                      <select value={reviewFilter} onChange={(e) => setReviewFilter(e.target.value)} className="rounded-xl border border-black/20 px-3 py-2 text-sm">
-                        <option value="all">Todas</option>
-                        <option value="highest">Más altas</option>
-                        <option value="lowest">Más bajas</option>
-                      </select>
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                      <div className="flex items-center gap-2">
-                        {[1, 2, 3, 4, 5].map((s) => (
-                          <button key={s} onClick={() => setReviewStars(s)} className={`text-2xl ${reviewStars >= s ? '' : 'opacity-30'}`}>⭐</button>
-                        ))}
-                      </div>
-                      <textarea value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Dejá tu reseña" className="w-full rounded-2xl border border-black p-3 text-sm" />
-                      <button onClick={() => addReview(selectedProfessional)} className="rounded-2xl bg-black px-4 py-2 font-semibold text-white">Enviar reseña</button>
-
-                      {getReviewsForProfessional(selectedProfessional).map((r) => (
-                        <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
-                          {'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="rounded-3xl border border-black bg-black p-6 text-white shadow-sm">
-                    <h4 className="text-xl font-bold">Información principal</h4>
-                    <div className="mt-5 space-y-3 text-sm text-white/85">
-                      <p><span className="font-semibold text-white">Contacto:</span> {formatPhoneDisplay(selectedProfessional.contact)}</p>
-                      {selectedProfessional.email && <p><span className="font-semibold text-white">Email:</span> {selectedProfessional.email}</p>}
-                      <p><span className="font-semibold text-white">Precio:</span> Consultar precio</p>
-                      <p><span className="font-semibold text-white">Opiniones:</span> {getReviewsForProfessional(selectedProfessional).length} reseñas</p>
-                    </div>
-                    <button onClick={() => openWhatsApp(selectedProfessional.contact, getSmartMessage(selectedProfessional, selectedService))} className="mt-6 w-full rounded-2xl bg-white px-4 py-3 font-semibold text-black">Contactar por WhatsApp</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
         )}
 
         <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 md:grid-cols-2 md:py-24">
@@ -784,7 +827,7 @@ export default function HomeFixPage() {
             </div>
             <div className="rounded-3xl border border-black p-6 shadow-sm">
               <p className="text-sm uppercase tracking-[0.2em] text-black/60">Rubros</p>
-              <p className="mt-3 text-4xl font-black">7</p>
+              <p className="mt-3 text-4xl font-black">{SERVICE_CATEGORIES.length}</p>
               <p className="mt-4 text-sm text-black/70">Servicios clave para el hogar.</p>
             </div>
             <div className="col-span-2 rounded-3xl border border-black p-6 shadow-sm">
@@ -806,21 +849,31 @@ export default function HomeFixPage() {
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {services.map((service) => (
-              <div key={service.name} className="rounded-3xl border border-black bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
-                <div className="mb-4 text-4xl">{service.icon}</div>
-                <h4 className="mb-2 text-2xl font-black">{service.name}</h4>
-                <p className="mb-5 leading-relaxed text-black/70">{service.desc}</p>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-semibold text-black/60">{service.pros} profesionales</span>
-                  <button
-                    onClick={() => {
-                      setSelectedService(service.name);
-                      setTimeout(() => scrollToSection('profesionales'), 50);
-                    }}
-                    className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white"
-                  >
-                    Ver opciones
-                  </button>
+              <div key={service.name} className="group relative overflow-hidden rounded-3xl border border-black/10 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
+                <div className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105" style={{ backgroundImage: `url(${service.image})` }} />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
+                <div className="relative flex min-h-[280px] flex-col justify-end p-6 text-white">
+                  <div className="mb-5">
+                    <span className="mb-4 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
+                      {service.pros} profesionales
+                    </span>
+                    <h4 className="mb-2 text-3xl font-black">{service.name}</h4>
+                    <p className="leading-relaxed text-white/80">{service.desc}</p>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-semibold text-white/80">
+                      {service.pros === 0 ? 'Sin profesionales cargados' : `${service.pros} disponibles`}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setSelectedService(service.name);
+                        setTimeout(() => scrollToSection('profesionales'), 50);
+                      }}
+                      className="rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black"
+                    >
+                      Ver opciones
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -832,10 +885,10 @@ export default function HomeFixPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">Cómo funciona</p>
             <h3 className="mb-10 mt-3 text-3xl font-black tracking-tight md:text-4xl">Rápido, claro y con ayuda inteligente</h3>
             <div className="grid gap-6 md:grid-cols-4">
-              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">🔎</div><h4 className="mb-2 text-lg font-bold">1. Buscás</h4><p className="text-sm text-white/75">Elegís el servicio que necesitás o consultás al asistente.</p></div>
-              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">💡</div><h4 className="mb-2 text-lg font-bold">2. Te orienta</h4><p className="text-sm text-white/75">El asistente te ayuda a encontrar el rubro correcto.</p></div>
-              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">👷‍♂️</div><h4 className="mb-2 text-lg font-bold">3. Comparás</h4><p className="text-sm text-white/75">Ves perfiles con zona, horarios y calificación.</p></div>
-              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">⭐</div><h4 className="mb-2 text-lg font-bold">4. Contratás y calificás</h4><p className="text-sm text-white/75">Contactás al profesional y después dejás tu reseña.</p></div>
+              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">1</div><h4 className="mb-2 text-lg font-bold">Buscás</h4><p className="text-sm text-white/75">Elegís el servicio que necesitás o consultás al asistente.</p></div>
+              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">2</div><h4 className="mb-2 text-lg font-bold">Te orienta</h4><p className="text-sm text-white/75">El asistente te ayuda a encontrar el rubro correcto.</p></div>
+              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">3</div><h4 className="mb-2 text-lg font-bold">Comparás</h4><p className="text-sm text-white/75">Ves perfiles con zona, horarios y calificación.</p></div>
+              <div className="rounded-3xl bg-white/10 p-6"><div className="mb-3 text-3xl">4</div><h4 className="mb-2 text-lg font-bold">Contactás</h4><p className="text-sm text-white/75">Hablás con el profesional y después dejás tu reseña.</p></div>
             </div>
           </div>
         </section>
@@ -844,16 +897,16 @@ export default function HomeFixPage() {
           <div className="mb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Categoría seleccionada</p>
             <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{activeService.name} disponibles</h3>
-            <p className="mt-3 max-w-2xl text-black/70">Estas son opciones modelo dentro de {activeService.name}.</p>
+            <p className="mt-3 max-w-2xl text-black/70">Explorá perfiles reales de esta categoría y contactalos directo desde la plataforma.</p>
           </div>
 
           <div className="mb-6 flex flex-wrap gap-3">
             <button onClick={() => setFilterAvailable((prev) => !prev)} className={`rounded-full border px-4 py-2 ${filterAvailable ? 'bg-black text-white' : ''}`}>Disponible ahora</button>
-            <select value={filterZone} onChange={(e) => setFilterZone(e.target.value)} className="rounded border px-3 py-2">
+            <select value={filterZone} onChange={(e) => setFilterZone(e.target.value)} className="rounded-full border bg-white px-4 py-2">
               <option value="all">Todas las zonas</option>
               {MENDOZA_DEPARTMENTS.map((z) => <option key={z}>{z}</option>)}
             </select>
-            <select value={sortMode} onChange={(e) => setSortMode(e.target.value)} className="rounded border px-3 py-2">
+            <select value={sortMode} onChange={(e) => setSortMode(e.target.value as SortMode)} className="rounded-full border bg-white px-4 py-2">
               <option value="rating">Mejor puntuados</option>
               <option value="available">Disponibles ahora</option>
             </select>
@@ -870,16 +923,23 @@ export default function HomeFixPage() {
                 const reviews = getReviewsForProfessional(pro);
                 const avg = reviews.length ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1) : (pro.rating || 'Nuevo');
                 return (
-                  <div key={`${pro.name}-${pro.contact}`} className="rounded-3xl border border-black p-6 shadow-sm transition hover:shadow-xl">
+                  <div key={`${pro.name}-${pro.contact}`} className="rounded-3xl border border-black bg-white p-6 shadow-sm transition hover:shadow-xl">
                     <div className="mb-2 flex gap-2">
                       {String(pro.availability || '').toLowerCase().includes('disponible ahora') && <span className="rounded-full bg-green-500 px-2 py-1 text-xs text-white">Disponible</span>}
-                      {parseFloat(pro.rating || 0) >= 4.8 && <span className="rounded-full bg-black px-2 py-1 text-xs text-white">Destacado</span>}
+                      {parseFloat(String(pro.rating || 0)) >= 4.8 && <span className="rounded-full bg-black px-2 py-1 text-xs text-white">Destacado</span>}
                     </div>
 
                     <div className="mb-4 flex items-start justify-between gap-3">
-                      <div>
-                        <h4 className="text-2xl font-black leading-tight">{pro.name}</h4>
-                        <p className="mt-1 text-black/70">{pro.role}</p>
+                      <div className="flex items-start gap-3">
+                        {pro.photoUrl ? (
+                          <img src={pro.photoUrl} alt={pro.name} className="h-14 w-14 rounded-2xl object-cover" />
+                        ) : (
+                          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-black text-lg font-black text-white">{initials(pro.name)}</div>
+                        )}
+                        <div>
+                          <h4 className="text-2xl font-black leading-tight">{pro.name}</h4>
+                          <p className="mt-1 text-black/70">{pro.role}</p>
+                        </div>
                       </div>
                       <div className="rounded-2xl bg-black px-3 py-2 text-sm font-bold text-white">⭐ {avg}</div>
                     </div>
@@ -984,7 +1044,7 @@ export default function HomeFixPage() {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           const reader = new FileReader();
-                          reader.onloadend = () => setProfileForm((prev) => ({ ...prev, photoUrl: reader.result }));
+                          reader.onloadend = () => setProfileForm((prev) => ({ ...prev, photoUrl: String(reader.result || '') }));
                           reader.readAsDataURL(file);
                         }}
                       />
@@ -1026,17 +1086,23 @@ export default function HomeFixPage() {
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Panel privado del creador</p>
                 <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Tu perfil de creador</h3>
                 <p className="mt-3 max-w-2xl text-black/70">Gestioná tu perfil y cargá profesionales manualmente.</p>
+                {!currentUser && (
+                  <div className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                    Activaste modo creador, pero para guardar cambios en Firebase tenés que iniciar sesión.
+                  </div>
+                )}
               </div>
 
               <div className="grid gap-6 lg:grid-cols-2">
                 <div className="rounded-3xl border border-black bg-white p-6">
-                  <h4 className="mb-4 font-bold">Perfil de Tomás Notti</h4>
+                  <h4 className="mb-4 font-bold">Perfil de {creatorProfile.name || 'Creador'}</h4>
                   <input value={creatorProfile.name} onChange={(e) => setCreatorProfile({ ...creatorProfile, name: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Nombre" />
                   <input value={creatorProfile.role} onChange={(e) => setCreatorProfile({ ...creatorProfile, role: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Rol" />
                   <input value={creatorProfile.email} onChange={(e) => setCreatorProfile({ ...creatorProfile, email: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Email" />
                   <input value={creatorProfile.phone} onChange={(e) => setCreatorProfile({ ...creatorProfile, phone: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="WhatsApp" />
                   <input value={creatorProfile.city} onChange={(e) => setCreatorProfile({ ...creatorProfile, city: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Ciudad" />
                   <textarea value={creatorProfile.bio} onChange={(e) => setCreatorProfile({ ...creatorProfile, bio: e.target.value })} className="min-h-[96px] w-full rounded border p-2" placeholder="Descripción" />
+                  <button onClick={saveCreatorProfile} className="mt-3 rounded bg-black px-4 py-2 text-white">Guardar perfil del creador</button>
                 </div>
 
                 <div className="rounded-3xl border border-black bg-white p-6">
@@ -1060,7 +1126,7 @@ export default function HomeFixPage() {
                       const file = e.target.files?.[0];
                       if (!file) return;
                       const reader = new FileReader();
-                      reader.onloadend = () => setNewWorker((prev) => ({ ...prev, photoUrl: reader.result }));
+                      reader.onloadend = () => setNewWorker((prev) => ({ ...prev, photoUrl: String(reader.result || '') }));
                       reader.readAsDataURL(file);
                     }}
                   />
@@ -1080,22 +1146,22 @@ export default function HomeFixPage() {
                             <p className="text-xs text-black/55">{worker.name || 'Sin nombre'} · {worker.role || 'Sin especialidad'}</p>
                           </div>
                           <div className="flex gap-2">
-                            <button onClick={() => setEditingWorkerId(editingWorkerId === worker.id ? null : worker.id)} className="rounded-lg border border-black px-3 py-1 text-xs font-semibold">{editingWorkerId === worker.id ? 'Cerrar' : 'Editar'}</button>
+                            <button onClick={() => setEditingWorkerId(editingWorkerId === worker.id ? null : worker.id || null)} className="rounded-lg border border-black px-3 py-1 text-xs font-semibold">{editingWorkerId === worker.id ? 'Cerrar' : 'Editar'}</button>
                             <button onClick={() => removeWorker(worker.id)} className="rounded-lg border border-black px-3 py-1 text-xs font-semibold">Eliminar</button>
                           </div>
                         </div>
 
                         {editingWorkerId === worker.id && (
                           <div className="grid gap-2 md:grid-cols-2">
-                            <input value={worker.name} onChange={(e) => updateWorker(worker.id, 'name', e.target.value)} className="w-full rounded border p-2" placeholder="Nombre" />
-                            <select value={worker.role} onChange={(e) => updateWorker(worker.id, 'role', e.target.value)} className="w-full rounded border p-2">
+                            <input value={worker.name} onChange={(e) => updateWorker(worker.id || '', 'name', e.target.value)} className="w-full rounded border p-2" placeholder="Nombre" />
+                            <select value={worker.role} onChange={(e) => updateWorker(worker.id || '', 'role', e.target.value)} className="w-full rounded border p-2">
                               {SERVICE_CATEGORIES.map((service) => <option key={service.name} value={service.name}>{service.name}</option>)}
                             </select>
-                            <select value={worker.area} onChange={(e) => updateWorker(worker.id, 'area', e.target.value)} className="w-full rounded border p-2">
+                            <select value={worker.area} onChange={(e) => updateWorker(worker.id || '', 'area', e.target.value)} className="w-full rounded border p-2">
                               {MENDOZA_DEPARTMENTS.map((department) => <option key={department} value={department}>{department}</option>)}
                             </select>
-                            <input value={String(worker.contact || '').replace(/[^0-9]/g, '').slice(-10)} onChange={(e) => updateWorker(worker.id, 'contact', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))} className="w-full rounded border p-2" placeholder="Teléfono (10 dígitos)" />
-                            <input value={worker.email || ''} onChange={(e) => updateWorker(worker.id, 'email', e.target.value)} className="w-full rounded border p-2" placeholder="Email" />
+                            <input value={String(worker.contact || '').replace(/[^0-9]/g, '').slice(-10)} onChange={(e) => updateWorker(worker.id || '', 'contact', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))} className="w-full rounded border p-2" placeholder="Teléfono (10 dígitos)" />
+                            <input value={worker.email || ''} onChange={(e) => updateWorker(worker.id || '', 'email', e.target.value)} className="w-full rounded border p-2" placeholder="Email" />
                             <input
                               type="file"
                               accept="image/*"
@@ -1104,20 +1170,23 @@ export default function HomeFixPage() {
                                 const file = e.target.files?.[0];
                                 if (!file) return;
                                 const reader = new FileReader();
-                                reader.onloadend = () => updateWorker(worker.id, 'photoUrl', reader.result);
+                                reader.onloadend = () => updateWorker(worker.id || '', 'photoUrl', String(reader.result || ''));
                                 reader.readAsDataURL(file);
                               }}
                             />
-                            <textarea value={worker.about || ''} onChange={(e) => updateWorker(worker.id, 'about', e.target.value)} className="min-h-[96px] w-full rounded border p-2 md:col-span-2" placeholder="Sobre este profesional" />
+                            <textarea value={worker.about || ''} onChange={(e) => updateWorker(worker.id || '', 'about', e.target.value)} className="min-h-[96px] w-full rounded border p-2 md:col-span-2" placeholder="Sobre este profesional" />
                             <div className="mt-2 flex items-center justify-between md:col-span-2">
                               <span className="text-sm font-semibold">Disponibilidad</span>
                               <button
-                                onClick={() => updateWorker(worker.id, 'availability', worker.availability === 'Disponible ahora' ? 'No disponible' : 'Disponible ahora')}
+                                onClick={() => updateWorker(worker.id || '', 'availability', worker.availability === 'Disponible ahora' ? 'No disponible' : 'Disponible ahora')}
                                 className={`rounded-full px-4 py-2 text-sm font-semibold text-white ${worker.availability === 'Disponible ahora' ? 'bg-green-500' : 'bg-red-500'}`}
                               >
                                 {worker.availability === 'Disponible ahora' ? 'Disponible ahora' : 'No disponible'}
                               </button>
                             </div>
+                            <button onClick={() => saveEditedWorker(worker)} className="rounded bg-black px-4 py-2 text-white md:col-span-2">
+                              Guardar cambios
+                            </button>
                           </div>
                         )}
                       </div>
