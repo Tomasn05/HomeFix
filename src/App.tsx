@@ -71,44 +71,37 @@ const SERVICE_CATEGORIES = [
   {
     name: 'Plomería',
     desc: 'Pérdidas, destapes, instalaciones y reparaciones.',
-    image:
-      'https://images.unsplash.com/photo-1621905252507-b35492ccf7c0?auto=format&fit=crop&w=1400&q=80',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Electricidad',
     desc: 'Arreglos, cableado, luces, tableros y urgencias.',
-    image:
-      'https://images.unsplash.com/photo-1555963966-b7ae5404b6ed?auto=format&fit=crop&w=1400&q=80',
+    image: 'https://images.unsplash.com/photo-1581092334651-ddf26d9a09d0?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Gas',
     desc: 'Gasistas matriculados para revisiones e instalaciones.',
-    image:
-      'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?auto=format&fit=crop&w=1400&q=80',
+    image: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Aire acondicionado',
     desc: 'Instalación, mantenimiento y service técnico.',
-    image:
-      'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1400&q=80',
+    image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Pintura',
     desc: 'Interior, exterior, retoques y trabajos completos.',
-    image:
-      'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=1400&q=80',
+    image: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Carpintería',
     desc: 'Muebles, arreglos, puertas y trabajos a medida.',
-    image:
-      'https://images.unsplash.com/photo-1513467655676-561b7d489a88?auto=format&fit=crop&w=1400&q=80',
+    image: 'https://images.unsplash.com/photo-1513467655676-561b7d489a88?auto=format&fit=crop&w=1400&q=80',
   },
   {
     name: 'Piletero',
     desc: 'Mantenimiento, limpieza y tratamiento de piscinas.',
-    image:
-      'https://images.unsplash.com/photo-1519046904884-53103b34b206?auto=format&fit=crop&w=1400&q=80',
+    image: 'https://i.argentino.com.ar/images/2013/0730/788713-manteniemiento-de-piscinas-piletero-20130730093945270.jpg',
   },
 ] as const;
 
@@ -120,13 +113,13 @@ const HELP_SUGGESTIONS = [
   { title: 'Quiero pintar mi casa', service: 'Pintura', answer: 'Te mostramos pintores disponibles.' },
   { title: 'Necesito arreglar un mueble', service: 'Carpintería', answer: 'Te mostramos carpinteros.' },
   { title: 'Mantenimiento de pileta', service: 'Piletero', answer: 'Te mostramos pileteros disponibles.' },
-] as const;
+];
 
 const MENDOZA_DEPARTMENTS = [
   'Capital', 'Godoy Cruz', 'Guaymallén', 'Las Heras', 'Luján de Cuyo', 'Maipú',
   'Junín', 'Rivadavia', 'San Martín', 'Santa Rosa', 'La Paz', 'Lavalle',
   'Tunuyán', 'Tupungato', 'San Carlos', 'San Rafael', 'General Alvear', 'Malargüe',
-] as const;
+];
 
 function initials(name: string) {
   return String(name || '')
@@ -405,6 +398,7 @@ export default function HomeFixPage() {
         closeAuthModal();
       } else {
         const result = await signInWithEmailAndPassword(auth, authForm.email, authForm.password);
+
         await result.user.reload();
 
         if (!result.user.emailVerified) {
@@ -474,6 +468,7 @@ export default function HomeFixPage() {
 
   const removeWorker = async (workerId?: string) => {
     if (!workerId) return;
+
     if (!auth.currentUser) {
       alert('Tenés que iniciar sesión para eliminar profesionales.');
       return;
@@ -567,11 +562,14 @@ export default function HomeFixPage() {
       };
 
       await addDoc(collection(db, 'reviews'), reviewData);
+
       setReviewStars(5);
       setReviewText('');
       setReviewFilter('all');
+
       await loadReviewsForWorker(pro);
       await loadMyReviews();
+
       alert('Reseña guardada correctamente');
     } catch (error) {
       console.error(error);
@@ -582,6 +580,7 @@ export default function HomeFixPage() {
   const getReviewsForProfessional = (pro: Worker) => {
     const workerId = buildWorkerId(pro);
     const list = savedReviews.filter((r) => r.workerId === workerId);
+
     if (reviewFilter === 'highest') return [...list].sort((a, b) => b.stars - a.stars);
     if (reviewFilter === 'lowest') return [...list].sort((a, b) => a.stars - b.stars);
     return list;
@@ -806,6 +805,107 @@ export default function HomeFixPage() {
               </form>
             </div>
           </div>
+        )}
+
+        {selectedProfessional && (
+          <section className="mx-auto max-w-7xl px-6 pt-10">
+            <div className="rounded-[2rem] border border-black bg-zinc-50 p-8 md:p-10">
+              <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-start gap-5">
+                  {selectedProfessional.photoUrl ? (
+                    <img src={selectedProfessional.photoUrl} alt={selectedProfessional.name} className="h-20 w-20 rounded-3xl border border-black object-cover" />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-black text-3xl font-black text-white">{initials(selectedProfessional.name)}</div>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Perfil del profesional</p>
+                    <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{selectedProfessional.name}</h3>
+                    <p className="mt-2 text-lg text-black/70">{selectedProfessional.role}</p>
+                    <div className="mt-4 flex flex-wrap gap-3 text-sm">
+                      <span className="rounded-full border border-black px-4 py-2">⭐ {(() => {
+                        const reviews = getReviewsForProfessional(selectedProfessional);
+                        const avg = reviews.length ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1) : selectedProfessional.rating;
+                        return avg;
+                      })()}</span>
+                      <span className="rounded-full border border-black px-4 py-2">📍 {selectedProfessional.area}</span>
+                      <span className="rounded-full border border-black px-4 py-2">⏰ {selectedProfessional.availability}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setSelectedProfessional(null)} className="rounded-2xl border border-black px-5 py-3 font-semibold">Cerrar perfil</button>
+                  {isCreatorMode && (
+                    <button
+                      onClick={() => {
+                        const workerId = ensureEditableWorker(selectedProfessional);
+                        setEditingWorkerId(workerId);
+                        setSelectedProfessional(null);
+                        setTimeout(() => document.querySelector('[data-creator-panel]')?.scrollIntoView({ behavior: 'smooth' }), 100);
+                      }}
+                      className="rounded-2xl bg-black px-5 py-3 font-semibold text-white"
+                    >
+                      Editar
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
+                    <h4 className="text-xl font-bold">Sobre este profesional</h4>
+                    <p className="mt-4 text-black/75">{selectedProfessional.about || 'Profesional verificado dentro de HomeFix con atención personalizada y coordinación directa con el cliente.'}</p>
+                  </div>
+
+                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <h4 className="text-xl font-bold">Reseñas</h4>
+                      <select value={reviewFilter} onChange={(e) => setReviewFilter(e.target.value as ReviewFilter)} className="rounded-xl border border-black/20 px-3 py-2 text-sm">
+                        <option value="all">Todas</option>
+                        <option value="highest">Más altas</option>
+                        <option value="lowest">Más bajas</option>
+                      </select>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <button key={s} onClick={() => setReviewStars(s)} className={`text-2xl ${reviewStars >= s ? '' : 'opacity-30'}`}>⭐</button>
+                        ))}
+                      </div>
+                      <textarea value={reviewText} onChange={(e) => setReviewText(e.target.value)} placeholder="Dejá tu reseña" className="w-full rounded-2xl border border-black p-3 text-sm" />
+                      <button onClick={() => addReview(selectedProfessional)} className="rounded-2xl bg-black px-4 py-2 font-semibold text-white">Enviar reseña</button>
+
+                      {getReviewsForProfessional(selectedProfessional).length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/60">
+                          Todavía no hay reseñas para este profesional.
+                        </div>
+                      ) : (
+                        getReviewsForProfessional(selectedProfessional).map((r) => (
+                          <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
+                            {'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-black bg-black p-6 text-white shadow-sm">
+                    <h4 className="text-xl font-bold">Información principal</h4>
+                    <div className="mt-5 space-y-3 text-sm text-white/85">
+                      <p><span className="font-semibold text-white">Contacto:</span> {formatPhoneDisplay(selectedProfessional.contact)}</p>
+                      {selectedProfessional.email && <p><span className="font-semibold text-white">Email:</span> {selectedProfessional.email}</p>}
+                      <p><span className="font-semibold text-white">Precio:</span> Consultar precio</p>
+                      <p><span className="font-semibold text-white">Opiniones:</span> {getReviewsForProfessional(selectedProfessional).length} reseñas</p>
+                    </div>
+                    <button onClick={() => openWhatsApp(selectedProfessional.contact, getSmartMessage(selectedProfessional, selectedService))} className="mt-6 w-full rounded-2xl bg-white px-4 py-3 font-semibold text-black">Contactar por WhatsApp</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         )}
 
         <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 md:grid-cols-2 md:py-24">
