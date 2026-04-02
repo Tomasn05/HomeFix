@@ -98,9 +98,9 @@ const SERVICE_CATEGORIES = [
     image: 'https://images.unsplash.com/photo-1513467655676-561b7d489a88?auto=format&fit=crop&w=1400&q=80',
   },
   {
-    name: 'Piletero',
+    name: 'Pileta',
     desc: 'Mantenimiento, limpieza y tratamiento de piscinas.',
-    image: 'https://i.argentino.com.ar/images/2013/0730/788713-manteniemiento-de-piscinas-piletero-20130730093945270.jpg',
+    image: 'https://i.argentino.com.ar/images/2013/0730/788713-plomeria-ferretera-ermita-20130730093945270.jpg',
   },
 ];
 
@@ -111,7 +111,7 @@ const HELP_SUGGESTIONS = [
   { title: 'El aire no enfría', service: 'Aire acondicionado', answer: 'Probablemente sea el aire acondicionado. Te mostramos técnicos.' },
   { title: 'Quiero pintar mi casa', service: 'Pintura', answer: 'Te mostramos pintores disponibles.' },
   { title: 'Necesito arreglar un mueble', service: 'Carpintería', answer: 'Te mostramos carpinteros.' },
-  { title: 'Mantenimiento de pileta', service: 'Piletero', answer: 'Te mostramos pileteros disponibles.' },
+  { title: 'Mantenimiento de pileta', service: 'Pileta', answer: 'Te mostramos pileteros disponibles.' },
 ];
 
 const MENDOZA_DEPARTMENTS = [
@@ -258,7 +258,7 @@ export default function HomeFixPage() {
     if (service === 'Aire acondicionado') return `${base} El aire acondicionado no está funcionando bien.`;
     if (service === 'Pintura') return `${base} Quiero pintar un ambiente de mi casa.`;
     if (service === 'Carpintería') return `${base} Necesito arreglar o hacer un mueble.`;
-    if (service === 'Piletero') return `${base} Necesito mantenimiento para la pileta.`;
+    if (service === 'Pileta') return `${base} Necesito mantenimiento para la pileta.`;
     return `${base} Quería consultarte por un trabajo.`;
   };
 
@@ -1068,7 +1068,7 @@ export default function HomeFixPage() {
                     else if (text.includes('aire')) setSelectedService('Aire acondicionado');
                     else if (text.includes('pint')) setSelectedService('Pintura');
                     else if (text.includes('mueble') || text.includes('puerta')) setSelectedService('Carpintería');
-                    else if (text.includes('pileta')) setSelectedService('Piletero');
+                    else if (text.includes('pileta')) setSelectedService('Pileta');
                     setAssistantMessage('Te mostramos profesionales que pueden ayudarte.');
                     setTimeout(() => document.getElementById('profesionales')?.scrollIntoView({ behavior: 'smooth' }), 200);
                   }}
