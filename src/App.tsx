@@ -1020,7 +1020,42 @@ export default function HomeFixPage() {
         )}
       </main>
 
-      <footer className="border-t border-black/10">
+      
+{/* CTA FINAL */}
+<section className="mx-auto max-w-7xl px-6 pb-20 pt-10">
+  <div className="text-center">
+
+    <h3 className="text-2xl md:text-3xl font-bold mb-4">
+      ¿Querés trabajar con HomeFix?
+    </h3>
+
+    <p className="text-black/70 mb-6">
+      Sumate como profesional y empezá a recibir clientes en Mendoza.
+    </p>
+
+    <div className="flex flex-col sm:flex-row justify-center gap-4">
+
+      <button
+        onClick={() => openAuthModal('register')}
+        className="bg-black text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition"
+      >
+        Unirse a HomeFix
+      </button>
+
+      <button
+        onClick={() => openWhatsApp(creatorProfile.phone, 'Hola Tomi, quiero trabajar con HomeFix')}
+        className="border border-black px-6 py-3 rounded-xl font-semibold hover:bg-black hover:text-white transition"
+      >
+        Contactar por WhatsApp
+      </button>
+
+    </div>
+
+  </div>
+</section>
+
+
+<footer className="border-t border-black/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-black/60 sm:px-6 md:flex-row">
           <p>© 2026 HomeFix. Todos los derechos reservados.</p>
           <div className="flex gap-6">
