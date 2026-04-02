@@ -201,11 +201,25 @@ export default function HomeFixPage() {
 
   const activeService = services.find((service) => service.name === selectedService) || services[0];
 
+  const getAverageRatingValue = (pro: Worker) => {
+    const reviews = getReviewsForProfessional(pro);
+    if (reviews.length > 0) {
+      return reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length;
+    }
+
+    const numericRating = parseFloat(String(pro.rating || 0));
+    return Number.isFinite(numericRating) ? numericRating : 0;
+  };
+
   const processedWorkers = useMemo(() => {
     let list = [...(activeService?.workers || [])];
     if (filterAvailable) list = list.filter((w) => String(w.availability || '').toLowerCase().includes('disponible ahora'));
     if (filterZone !== 'all') list = list.filter((w) => w.area === filterZone);
-    if (sortMode === 'rating') list.sort((a, b) => parseFloat(String(b.rating || 0)) - parseFloat(String(a.rating || 0)));
+
+    if (sortMode === 'rating') {
+      list.sort((a, b) => getAverageRatingValue(b) - getAverageRatingValue(a));
+    }
+
     if (sortMode === 'available') {
       list.sort((a, b) => {
         const aNow = String(a.availability || '').toLowerCase().includes('disponible ahora');
@@ -214,7 +228,7 @@ export default function HomeFixPage() {
       });
     }
     return list;
-  }, [activeService, filterAvailable, filterZone, sortMode]);
+  }, [activeService, filterAvailable, filterZone, sortMode, savedReviews, reviewFilter]);
 
   const totalProfessionals = addedWorkers.length;
 
