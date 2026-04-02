@@ -202,7 +202,8 @@ export default function HomeFixPage() {
   const activeService = services.find((service) => service.name === selectedService) || services[0];
 
   const getAverageRatingValue = (pro: Worker) => {
-    const reviews = getReviewsForProfessional(pro);
+    const workerId = buildWorkerId(pro);
+    const reviews = savedReviews.filter((r) => r.workerId === workerId);
     if (reviews.length > 0) {
       return reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length;
     }
