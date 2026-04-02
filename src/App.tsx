@@ -155,6 +155,9 @@ export default function HomeFixPage() {
     bio: 'Estoy construyendo HomeFix para conectar clientes con profesionales confiables de forma simple y rápida.',
   });
 
+  const [showTerms, setShowTerms] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+
   const [newWorker, setNewWorker] = useState({
     name: '',
     role: 'Plomería',
@@ -252,11 +255,13 @@ export default function HomeFixPage() {
   const openAuthModal = (mode) => {
     setAuthMode(mode);
     setAuthRole('cliente');
+    setAcceptTerms(false);
     setIsAuthOpen(true);
   };
 
   const closeAuthModal = () => {
     setIsAuthOpen(false);
+    setAcceptTerms(false);
     setAuthForm({ name: '', email: '', password: '', confirmPassword: '' });
   };
 
