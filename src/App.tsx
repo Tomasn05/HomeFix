@@ -767,7 +767,16 @@ export default function HomeFixPage() {
                     </div>
                     <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <button onClick={() => openWhatsApp(pro.contact, getSmartMessage(pro, selectedService))} className="rounded-2xl bg-black px-4 py-3 text-center font-semibold text-white">Contactar</button>
-                      <button onClick={async () => { setSelectedProfessional(pro); await loadReviewsForWorker(pro); setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50); }} className="rounded-2xl border border-black px-4 py-3 font-semibold">Ver perfil</button>
+                      <button onClick={async () => {
+                        setSelectedProfessional(pro);
+                        await loadReviewsForWorker(pro);
+                        setTimeout(() => {
+                          document.getElementById('perfil-profesional')?.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start',
+                          });
+                        }, 120);
+                      }} className="rounded-2xl border border-black px-4 py-3 font-semibold">Ver perfil</button>
                     </div>
                   </div>
                 );
@@ -827,7 +836,7 @@ export default function HomeFixPage() {
         )}
 
         {selectedProfessional && (
-          <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
+          <section id="perfil-profesional" className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
             <div className="rounded-[2rem] border border-black bg-zinc-50 p-6 sm:p-8 md:p-10">
               <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start gap-5">
