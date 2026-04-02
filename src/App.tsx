@@ -827,7 +827,7 @@ export default function HomeFixPage() {
 
         {selectedProfessional && (
           <section className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
-            <div className="rounded-[2rem] border border-black bg-zinc-50 p-8 md:p-10">
+            <div className="rounded-[2rem] border border-black bg-zinc-50 p-6 sm:p-8 md:p-10">
               <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start gap-5">
                   {selectedProfessional.photoUrl ? (
@@ -839,9 +839,91 @@ export default function HomeFixPage() {
                     <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Perfil del profesional</p>
                     <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{selectedProfessional.name}</h3>
                     <p className="mt-2 text-lg text-black/70">{selectedProfessional.role}</p>
+                    <div className="mt-4 flex flex-wrap gap-3 text-sm">
+                      <span className="rounded-full border border-black px-4 py-2">⭐ {(() => {
+                        const reviews = getReviewsForProfessional(selectedProfessional);
+                        const avg = reviews.length ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1) : selectedProfessional.rating;
+                        return avg || 'Nuevo';
+                      })()}</span>
+                      <span className="rounded-full border border-black px-4 py-2">📍 {selectedProfessional.area}</span>
+                      <span className="rounded-full border border-black px-4 py-2">⏰ {selectedProfessional.availability || 'Disponible ahora'}</span>
+                    </div>
                   </div>
                 </div>
-                <button onClick={() => setSelectedProfessional(null)} className="rounded-2xl border border-black px-5 py-3 font-semibold">Cerrar perfil</button>
+                <div className="flex gap-2">
+                  <button onClick={() => setSelectedProfessional(null)} className="rounded-2xl border border-black px-5 py-3 font-semibold">Cerrar perfil</button>
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
+                    <h4 className="text-xl font-bold">Sobre este profesional</h4>
+                    <p className="mt-4 text-black/75">
+                      {selectedProfessional.about || 'Profesional verificado dentro de HomeFix con atención personalizada y coordinación directa con el cliente.'}
+                    </p>
+                  </div>
+
+                  <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <h4 className="text-xl font-bold">Reseñas</h4>
+                      <select value={reviewFilter} onChange={(e) => setReviewFilter(e.target.value as ReviewFilter)} className="rounded-xl border border-black/20 px-3 py-2 text-sm">
+                        <option value="all">Todas</option>
+                        <option value="highest">Más altas</option>
+                        <option value="lowest">Más bajas</option>
+                      </select>
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <button key={s} onClick={() => setReviewStars(s)} className={`text-2xl ${reviewStars >= s ? '' : 'opacity-30'}`}>⭐</button>
+                        ))}
+                      </div>
+                      <textarea
+                        value={reviewText}
+                        onChange={(e) => setReviewText(e.target.value)}
+                        placeholder="Dejá tu reseña"
+                        className="w-full rounded-2xl border border-black p-3 text-sm"
+                      />
+                      <button onClick={() => addReview(selectedProfessional)} className="rounded-2xl bg-black px-4 py-2 font-semibold text-white">
+                        Enviar reseña
+                      </button>
+
+                      {getReviewsForProfessional(selectedProfessional).length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/60">
+                          Todavía no hay reseñas para este profesional.
+                        </div>
+                      ) : (
+                        getReviewsForProfessional(selectedProfessional).map((r) => (
+                          <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
+                            {'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="rounded-3xl border border-black bg-black p-6 text-white shadow-sm">
+                    <h4 className="text-xl font-bold">Información principal</h4>
+                    <div className="mt-5 space-y-3 text-sm text-white/85">
+                      <p><span className="font-semibold text-white">Contacto:</span> {formatPhoneDisplay(selectedProfessional.contact)}</p>
+                      {selectedProfessional.email && <p><span className="font-semibold text-white">Email:</span> {selectedProfessional.email}</p>}
+                      <p><span className="font-semibold text-white">Zona:</span> {selectedProfessional.area}</p>
+                      <p><span className="font-semibold text-white">Disponibilidad:</span> {selectedProfessional.availability || 'Disponible ahora'}</p>
+                      <p><span className="font-semibold text-white">Opiniones:</span> {getReviewsForProfessional(selectedProfessional).length} reseñas</p>
+                      <p><span className="font-semibold text-white">Precio:</span> Consultar precio</p>
+                    </div>
+                    <button
+                      onClick={() => openWhatsApp(selectedProfessional.contact, getSmartMessage(selectedProfessional, selectedService))}
+                      className="mt-6 w-full rounded-2xl bg-white px-4 py-3 font-semibold text-black"
+                    >
+                      Contactar por WhatsApp
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
