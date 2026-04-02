@@ -10,41 +10,77 @@ import {
 } from 'firebase/auth';
 import { addDoc, collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
 
-const SERVICE_CATEGORIES = [
+const BASE_SERVICES = [
   {
     name: 'Plomería',
     icon: '🔧',
     desc: 'Pérdidas, destapes, instalaciones y reparaciones.',
+    workers: [
+      { name: 'Nicolás Rivas', role: 'Plomero domiciliario', rating: '4.9', reviews: 154, area: 'Godoy Cruz', availability: 'Disponible hoy · 17:00 a 21:00', contact: '+54 9 261 555-3121' },
+      { name: 'Franco Lima', role: 'Destapes e instalaciones', rating: '4.7', reviews: 96, area: 'Luján de Cuyo', availability: 'Mañana · 09:00 a 13:00', contact: '+54 9 261 555-4482' },
+      { name: 'Ezequiel Torres', role: 'Urgencias y reparaciones', rating: '4.8', reviews: 121, area: 'Ciudad de Mendoza', availability: 'Disponible ahora', contact: '+54 9 261 555-6604' },
+    ],
   },
   {
     name: 'Electricidad',
     icon: '⚡',
     desc: 'Arreglos, cableado, luces, tableros y urgencias.',
+    workers: [
+      { name: 'Tomás Notti', role: 'Electricista domiciliario', rating: '5.0', reviews: 32, area: 'Godoy Cruz', availability: 'Disponible ahora', contact: '+54 9 261 555-0000', photoUrl: '', about: 'Electricista con experiencia en instalaciones, urgencias y mantenimiento general. Trabajo prolijo y rápido.' },
+      { name: 'Matías Gil', role: 'Electricista matriculado', rating: '4.9', reviews: 138, area: 'Maipú', availability: 'Hoy · 18:30 a 22:00', contact: '+54 9 261 555-7810' },
+      { name: 'Santiago Correa', role: 'Tableros y luminarias', rating: '4.6', reviews: 82, area: 'Guaymallén', availability: 'Mañana · 08:00 a 12:00', contact: '+54 9 261 555-9205' },
+      { name: 'Bruno Agüero', role: 'Urgencias eléctricas', rating: '4.8', reviews: 110, area: 'Chacras de Coria', availability: 'Disponible ahora', contact: '+54 9 261 555-3348' },
+    ],
   },
   {
     name: 'Gas',
     icon: '🔥',
     desc: 'Gasistas matriculados para revisiones e instalaciones.',
+    workers: [
+      { name: 'Juan Pérez', role: 'Gasista matriculado', rating: '4.9', reviews: 128, area: 'Godoy Cruz', availability: 'Disponible hoy · 18:00 a 21:00', contact: '+54 9 261 555-1234' },
+      { name: 'Martín Sosa', role: 'Gasista domiciliario', rating: '4.8', reviews: 94, area: 'Chacras de Coria', availability: 'Disponible mañana · 09:00 a 13:00', contact: '+54 9 261 555-2088' },
+      { name: 'Leandro Díaz', role: 'Instalaciones y reparaciones', rating: '4.7', reviews: 76, area: 'Ciudad de Mendoza', availability: 'Disponible ahora', contact: '+54 9 261 555-4477' },
+    ],
   },
   {
     name: 'Aire acondicionado',
     icon: '❄️',
     desc: 'Instalación, mantenimiento y service técnico.',
+    workers: [
+      { name: 'Federico Lobo', role: 'Instalación y service', rating: '4.8', reviews: 102, area: 'Ciudad de Mendoza', availability: 'Hoy · 16:00 a 20:00', contact: '+54 9 261 555-1470' },
+      { name: 'Tomás Becerra', role: 'Mantenimiento preventivo', rating: '4.7', reviews: 73, area: 'Godoy Cruz', availability: 'Mañana · 10:00 a 14:00', contact: '+54 9 261 555-2589' },
+      { name: 'Lucas Ferreyra', role: 'Reparaciones y carga', rating: '4.9', reviews: 131, area: 'Guaymallén', availability: 'Disponible ahora', contact: '+54 9 261 555-6691' },
+    ],
   },
   {
     name: 'Pintura',
     icon: '🎨',
     desc: 'Interior, exterior, retoques y trabajos completos.',
+    workers: [
+      { name: 'Agustín Vera', role: 'Pintor interior', rating: '4.8', reviews: 88, area: 'Luján de Cuyo', availability: 'Hoy · 15:00 a 19:00', contact: '+54 9 261 555-7402' },
+      { name: 'Facundo Paz', role: 'Retoques y terminaciones', rating: '4.6', reviews: 61, area: 'Ciudad de Mendoza', availability: 'Mañana · 09:00 a 12:00', contact: '+54 9 261 555-8023' },
+      { name: 'Gonzalo Videla', role: 'Pintura completa', rating: '4.9', reviews: 117, area: 'Chacras de Coria', availability: 'Disponible ahora', contact: '+54 9 261 555-9317' },
+    ],
   },
   {
     name: 'Carpintería',
     icon: '🪚',
     desc: 'Muebles, arreglos, puertas y trabajos a medida.',
+    workers: [
+      { name: 'Lucas Herrera', role: 'Carpintero general', rating: '4.8', reviews: 95, area: 'Godoy Cruz', availability: 'Hoy · 16:00 a 20:00', contact: '+54 9 261 555-2231' },
+      { name: 'Mariano Díaz', role: 'Muebles a medida', rating: '4.9', reviews: 112, area: 'Luján de Cuyo', availability: 'Mañana · 09:00 a 13:00', contact: '+54 9 261 555-7782' },
+      { name: 'Sergio López', role: 'Reparaciones', rating: '4.7', reviews: 68, area: 'Ciudad de Mendoza', availability: 'Disponible ahora', contact: '+54 9 261 555-9901' },
+    ],
   },
   {
     name: 'Piletero',
     icon: '🏊',
     desc: 'Mantenimiento, limpieza y tratamiento de piscinas.',
+    workers: [
+      { name: 'Diego Ruiz', role: 'Mantenimiento de piletas', rating: '4.9', reviews: 87, area: 'Chacras de Coria', availability: 'Hoy · 14:00 a 18:00', contact: '+54 9 261 555-4412' },
+      { name: 'Facundo Ríos', role: 'Limpieza y químicos', rating: '4.6', reviews: 55, area: 'Maipú', availability: 'Mañana · 10:00 a 13:00', contact: '+54 9 261 555-6633' },
+      { name: 'Tomás Vega', role: 'Service completo', rating: '4.8', reviews: 74, area: 'Guaymallén', availability: 'Disponible ahora', contact: '+54 9 261 555-8890' },
+    ],
   },
 ];
 
@@ -95,7 +131,6 @@ function buildWorkerId(pro) {
 }
 
 export default function HomeFixPage() {
-  const [showTerms, setShowTerms] = useState(false);
   const [selectedService, setSelectedService] = useState('Gas');
   const [selectedProfessional, setSelectedProfessional] = useState(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -147,16 +182,16 @@ export default function HomeFixPage() {
   const [reviewFilter, setReviewFilter] = useState('all');
 
   const services = useMemo(() => {
-    return SERVICE_CATEGORIES.map((service) => {
-      const serviceWorkers = addedWorkers.filter((worker) => matchesService(worker.role, service.name));
-      return { ...service, workers: serviceWorkers, pros: serviceWorkers.length };
+    return BASE_SERVICES.map((service) => {
+      const extra = addedWorkers.filter((worker) => matchesService(worker.role, service.name));
+      return { ...service, workers: [...service.workers, ...extra], pros: service.workers.length + extra.length };
     });
   }, [addedWorkers]);
 
-  const activeService = services.find((service) => service.name === selectedService) || services[0];
+  const activeService = services.find((service) => service.name === selectedService) || services[2];
 
   const processedWorkers = useMemo(() => {
-    let list = [...(activeService?.workers || [])];
+    let list = [...activeService.workers];
     if (filterAvailable) list = list.filter((w) => String(w.availability || '').toLowerCase().includes('disponible ahora'));
     if (filterZone !== 'all') list = list.filter((w) => w.area === filterZone);
     if (sortMode === 'rating') list.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
@@ -170,7 +205,7 @@ export default function HomeFixPage() {
     return list;
   }, [activeService, filterAvailable, filterZone, sortMode]);
 
-  const totalProfessionals = addedWorkers.length;
+  const totalProfessionals = services.reduce((acc, service) => acc + service.workers.length, 0);
 
   const formatPhoneForWhatsApp = (contact) => {
     const digits = String(contact || '').replace(/[^0-9]/g, '');
@@ -258,6 +293,10 @@ export default function HomeFixPage() {
 
     try {
       if (authMode === 'register') {
+        if (!acceptTerms) {
+          alert('Tenés que aceptar los términos y condiciones.');
+          return;
+        }
         if (authForm.password !== authForm.confirmPassword) {
           alert('Las contraseñas no coinciden');
           return;
@@ -631,7 +670,7 @@ export default function HomeFixPage() {
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/45">{authMode === 'login' ? 'Ingreso' : 'Registro'}</p>
                   <h3 className="mt-2 text-3xl font-black tracking-tight">{authMode === 'login' ? 'Entrá a HomeFix' : 'Creá tu cuenta'}</h3>
-                  <p className="mt-2 text-sm text-black/65">Esta pantalla ya está lista para conectarla con Firebase Auth.</p>
+                  
                 </div>
                 <button onClick={closeAuthModal} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">✕</button>
               </div>
@@ -660,18 +699,10 @@ export default function HomeFixPage() {
                 {authMode === 'register' && (
                   <input type="password" value={authForm.confirmPassword} onChange={(e) => setAuthForm({ ...authForm, confirmPassword: e.target.value })} placeholder="Confirmar contraseña" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
                 )}
-                <button 
-<div className="flex items-center gap-2 mt-3 text-sm">
-  <input type="checkbox" required />
-  <span>Acepto los términos y condiciones</span>
-</div>
-
-<button type="submit" className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">{authMode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
+                <button type="submit" className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">{authMode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
               </form>
 
-              <div className="mt-4 rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/65">
-                Usuarios guardados en Firestore y verificación de email activada.
-              </div>
+              
             </div>
           </div>
         )}
@@ -866,58 +897,51 @@ export default function HomeFixPage() {
             </select>
           </div>
 
-          {processedWorkers.length === 0 ? (
-            <div className="rounded-[2rem] border border-dashed border-black/30 bg-zinc-50 p-8 text-center">
-              <p className="text-lg font-bold">Todavía no hay profesionales cargados en esta categoría.</p>
-              <p className="mt-2 text-black/65">Agregalos desde modo creador y van a aparecer acá automáticamente desde Firebase.</p>
-            </div>
-          ) : (
-            <div className="grid gap-6 lg:grid-cols-3">
-              {processedWorkers.map((pro) => {
-                const reviews = getReviewsForProfessional(pro);
-                const avg = reviews.length ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1) : (pro.rating || 'Nuevo');
-                return (
-                  <div key={`${pro.name}-${pro.contact}`} className="rounded-3xl border border-black p-6 shadow-sm transition hover:shadow-xl">
-                    <div className="mb-2 flex gap-2">
-                      {String(pro.availability || '').toLowerCase().includes('disponible ahora') && <span className="rounded-full bg-green-500 px-2 py-1 text-xs text-white">Disponible</span>}
-                      {parseFloat(pro.rating || 0) >= 4.8 && <span className="rounded-full bg-black px-2 py-1 text-xs text-white">Destacado</span>}
-                    </div>
-
-                    <div className="mb-4 flex items-start justify-between gap-3">
-                      <div>
-                        <h4 className="text-2xl font-black leading-tight">{pro.name}</h4>
-                        <p className="mt-1 text-black/70">{pro.role}</p>
-                      </div>
-                      <div className="rounded-2xl bg-black px-3 py-2 text-sm font-bold text-white">⭐ {avg}</div>
-                    </div>
-
-                    <div className="space-y-3 text-sm text-black/75">
-                      <p><span className="font-semibold text-black">Reseñas:</span> {reviews.length} opiniones</p>
-                      <p><span className="font-semibold text-black">Zona:</span> {pro.area}</p>
-                      <p><span className="font-semibold text-black">Disponibilidad:</span> {pro.availability || 'Disponible ahora'}</p>
-                      <p><span className="font-semibold text-black">Contacto:</span> {formatPhoneDisplay(pro.contact)}</p>
-                      {pro.email && <p><span className="font-semibold text-black">Email:</span> {pro.email}</p>}
-                      <p><span className="font-semibold text-black">Precio:</span> Consultar precio</p>
-                    </div>
-
-                    <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <button onClick={() => openWhatsApp(pro.contact, getSmartMessage(pro, selectedService))} className="rounded-2xl bg-black px-4 py-3 text-center font-semibold text-white">Contactar por WhatsApp</button>
-                      <button
-                        onClick={async () => {
-                          setSelectedProfessional(pro);
-                          await loadReviewsForWorker(pro);
-                          setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
-                        }}
-                        className="rounded-2xl border border-black px-4 py-3 font-semibold"
-                      >
-                        Ver perfil
-                      </button>
-                    </div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            {processedWorkers.map((pro) => {
+              const reviews = getReviewsForProfessional(pro);
+              const avg = reviews.length ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1) : (pro.rating || 'Nuevo');
+              return (
+                <div key={`${pro.name}-${pro.contact}`} className="rounded-3xl border border-black p-6 shadow-sm transition hover:shadow-xl">
+                  <div className="mb-2 flex gap-2">
+                    {String(pro.availability || '').toLowerCase().includes('disponible ahora') && <span className="rounded-full bg-green-500 px-2 py-1 text-xs text-white">Disponible</span>}
+                    {parseFloat(pro.rating || 0) >= 4.8 && <span className="rounded-full bg-black px-2 py-1 text-xs text-white">Destacado</span>}
                   </div>
-                );
-              })}
-            </div>
-          )}
+
+                  <div className="mb-4 flex items-start justify-between gap-3">
+                    <div>
+                      <h4 className="text-2xl font-black leading-tight">{pro.name}</h4>
+                      <p className="mt-1 text-black/70">{pro.role}</p>
+                    </div>
+                    <div className="rounded-2xl bg-black px-3 py-2 text-sm font-bold text-white">⭐ {avg}</div>
+                  </div>
+
+                  <div className="space-y-3 text-sm text-black/75">
+                    <p><span className="font-semibold text-black">Reseñas:</span> {reviews.length} opiniones</p>
+                    <p><span className="font-semibold text-black">Zona:</span> {pro.area}</p>
+                    <p><span className="font-semibold text-black">Disponibilidad:</span> {pro.availability || 'Disponible ahora'}</p>
+                    <p><span className="font-semibold text-black">Contacto:</span> {formatPhoneDisplay(pro.contact)}</p>
+                    {pro.email && <p><span className="font-semibold text-black">Email:</span> {pro.email}</p>}
+                    <p><span className="font-semibold text-black">Precio:</span> Consultar precio</p>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <button onClick={() => openWhatsApp(pro.contact, getSmartMessage(pro, selectedService))} className="rounded-2xl bg-black px-4 py-3 text-center font-semibold text-white">Contactar por WhatsApp</button>
+                    <button
+                      onClick={async () => {
+                        setSelectedProfessional(pro);
+                        await loadReviewsForWorker(pro);
+                        setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 50);
+                      }}
+                      className="rounded-2xl border border-black px-4 py-3 font-semibold"
+                    >
+                      Ver perfil
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
 
         <section className="mx-auto max-w-7xl px-6 pb-20 pt-6">
@@ -1050,7 +1074,7 @@ export default function HomeFixPage() {
                   <h4 className="mb-4 font-bold">Agregar profesional</h4>
                   <input placeholder="Nombre" value={newWorker.name} onChange={(e) => setNewWorker({ ...newWorker, name: e.target.value })} className="mb-2 w-full rounded border p-2" />
                   <select value={newWorker.role} onChange={(e) => setNewWorker({ ...newWorker, role: e.target.value })} className="mb-2 w-full rounded border p-2">
-                    {SERVICE_CATEGORIES.map((service) => <option key={service.name} value={service.name}>{service.name}</option>)}
+                    {BASE_SERVICES.map((service) => <option key={service.name} value={service.name}>{service.name}</option>)}
                   </select>
                   <select value={newWorker.area} onChange={(e) => setNewWorker({ ...newWorker, area: e.target.value })} className="mb-2 w-full rounded border p-2">
                     {MENDOZA_DEPARTMENTS.map((department) => <option key={department} value={department}>{department}</option>)}
@@ -1096,7 +1120,7 @@ export default function HomeFixPage() {
                           <div className="grid gap-2 md:grid-cols-2">
                             <input value={worker.name} onChange={(e) => updateWorker(worker.id, 'name', e.target.value)} className="w-full rounded border p-2" placeholder="Nombre" />
                             <select value={worker.role} onChange={(e) => updateWorker(worker.id, 'role', e.target.value)} className="w-full rounded border p-2">
-                              {SERVICE_CATEGORIES.map((service) => <option key={service.name} value={service.name}>{service.name}</option>)}
+                              {BASE_SERVICES.map((service) => <option key={service.name} value={service.name}>{service.name}</option>)}
                             </select>
                             <select value={worker.area} onChange={(e) => updateWorker(worker.id, 'area', e.target.value)} className="w-full rounded border p-2">
                               {MENDOZA_DEPARTMENTS.map((department) => <option key={department} value={department}>{department}</option>)}
@@ -1137,30 +1161,39 @@ export default function HomeFixPage() {
         )}
       </main>
 
-{/* MODAL TERMINOS */}
-{showTerms && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="bg-white max-w-2xl w-full p-6 rounded-2xl overflow-y-auto max-h-[80vh]">
-      <h2 className="text-xl font-bold mb-4">Términos y Condiciones</h2>
-      <p className="text-sm text-gray-700 space-y-2">
-        HomeFix es una plataforma intermediaria entre usuarios y profesionales independientes.
-        HomeFix no presta servicios ni se responsabiliza por los trabajos realizados.
-        La relación es directa entre cliente y profesional.
-        Al usar la plataforma aceptás estos términos.
-      </p>
-      <button onClick={() => setShowTerms(false)} className="mt-4 bg-black text-white px-4 py-2 rounded-lg">
-        Cerrar
-      </button>
-    </div>
-  </div>
-)}
 
+      {showTerms && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 px-4">
+          <div className="max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl md:p-8">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/45">Legal</p>
+                <h3 className="mt-2 text-2xl font-black tracking-tight md:text-3xl">Términos y Condiciones</h3>
+              </div>
+              <button onClick={() => setShowTerms(false)} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">✕</button>
+            </div>
+
+            <div className="space-y-4 text-sm leading-7 text-black/75">
+              <p><strong>Naturaleza del servicio.</strong> HomeFix es una plataforma digital que actúa como intermediaria entre usuarios que buscan servicios y profesionales independientes que los ofrecen. HomeFix no presta directamente los servicios publicados en la plataforma.</p>
+              <p><strong>Relación entre las partes.</strong> La contratación de cualquier servicio se realiza exclusivamente entre el usuario y el profesional. HomeFix no forma parte de dicha relación contractual.</p>
+              <p><strong>Responsabilidad.</strong> HomeFix no se responsabiliza por la calidad, ejecución, resultados, daños, incumplimientos o cualquier inconveniente derivado de los servicios prestados por los profesionales.</p>
+              <p><strong>Profesionales independientes.</strong> Todos los profesionales registrados en la plataforma actúan de manera independiente y no tienen relación laboral, societaria ni de dependencia con HomeFix.</p>
+              <p><strong>Verificación y contenido.</strong> HomeFix puede mostrar información, valoraciones o perfiles de profesionales, pero no garantiza la veracidad absoluta de dicha información.</p>
+              <p><strong>Uso de la plataforma.</strong> Los usuarios se comprometen a utilizar la plataforma de manera responsable y conforme a la legislación vigente.</p>
+              <p><strong>Limitación de responsabilidad.</strong> En ningún caso HomeFix será responsable por daños directos o indirectos derivados del uso de la plataforma o de los servicios contratados a través de ella.</p>
+              <p><strong>Contacto y soporte.</strong> HomeFix podrá facilitar canales de contacto, pero no interviene en disputas entre usuarios y profesionales.</p>
+              <p><strong>Modificaciones.</strong> HomeFix se reserva el derecho de modificar estos términos en cualquier momento.</p>
+              <p className="rounded-2xl border border-black/10 bg-zinc-50 px-4 py-3"><strong>Importante:</strong> al utilizar HomeFix, el usuario acepta que la plataforma actúa únicamente como intermediaria y que toda contratación es bajo su propia responsabilidad.</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="border-t border-black/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-black/60 md:flex-row">
           <p>© 2026 HomeFix. Todos los derechos reservados.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-black">Términos</a>
+            <button onClick={() => setShowTerms(true)} className="hover:text-black">Términos y Condiciones</button>
             <a href="#" className="hover:text-black">Privacidad</a>
             <a href="#" className="hover:text-black">Contacto</a>
           </div>
@@ -1229,12 +1262,7 @@ export default function HomeFixPage() {
             <span>Asistente HomeFix</span>
           </button>
         </div>
-      
-<button onClick={() => setShowTerms(true)} className="text-sm underline">
-  Términos y Condiciones
-</button>
-
-</footer>
+      </footer>
     </div>
   );
 }
