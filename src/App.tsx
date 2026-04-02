@@ -167,6 +167,8 @@ export default function HomeFixPage() {
     city: 'Mendoza',
     bio: 'Estoy construyendo HomeFix para conectar clientes con profesionales confiables de forma simple y rápida.',
   });
+  const [showTerms, setShowTerms] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [newWorker, setNewWorker] = useState<Worker>({
     name: '',
     role: 'Plomería',
@@ -329,6 +331,10 @@ export default function HomeFixPage() {
     e.preventDefault();
     try {
       if (authMode === 'register') {
+        if (!acceptTerms) {
+          alert('Tenés que aceptar los términos y condiciones');
+          return;
+        }
         if (authForm.password !== authForm.confirmPassword) {
           alert('Las contraseñas no coinciden');
           return;
@@ -354,6 +360,7 @@ export default function HomeFixPage() {
         alert('Ingreso exitoso');
       }
       setIsAuthOpen(false);
+      setAcceptTerms(false);
       setAuthForm({ name: '', email: '', password: '', confirmPassword: '' });
     } catch (error: any) {
       alert(error.message);
@@ -539,8 +546,8 @@ export default function HomeFixPage() {
               </>
             ) : (
               <>
-                <button onClick={() => { setAuthMode('login'); setAuthRole('cliente'); setIsAuthOpen(true); }} className="text-sm font-semibold">Ingresar</button>
-                <button onClick={() => { setAuthMode('register'); setAuthRole('cliente'); setIsAuthOpen(true); }} className="rounded-xl border border-black px-3 py-2 text-sm font-semibold sm:px-4">Registrarme</button>
+                <button onClick={() => { setAuthMode('login'); setAuthRole('cliente'); setAcceptTerms(false); setIsAuthOpen(true); }} className="text-sm font-semibold">Ingresar</button>
+                <button onClick={() => { setAuthMode('register'); setAuthRole('cliente'); setAcceptTerms(false); setIsAuthOpen(true); }} className="rounded-xl border border-black px-3 py-2 text-sm font-semibold sm:px-4">Registrarme</button>
               </>
             )}
 
@@ -568,8 +575,8 @@ export default function HomeFixPage() {
                       <button onClick={() => scrollToSection('profesionales')} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">Profesionales</button>
                       {!currentUser && (
                         <>
-                          <button onClick={() => { setIsMenuOpen(false); setAuthMode('login'); setIsAuthOpen(true); }} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100 sm:hidden">Ingresar</button>
-                          <button onClick={() => { setIsMenuOpen(false); setAuthMode('register'); setIsAuthOpen(true); }} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100 sm:hidden">Registrarme</button>
+                          <button onClick={() => { setIsMenuOpen(false); setAuthMode('login'); setAcceptTerms(false); setIsAuthOpen(true); }} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100 sm:hidden">Ingresar</button>
+                          <button onClick={() => { setIsMenuOpen(false); setAuthMode('register'); setAcceptTerms(false); setIsAuthOpen(true); }} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100 sm:hidden">Registrarme</button>
                         </>
                       )}
                       {currentUser && <button onClick={scrollToProfile} className="rounded-2xl px-4 py-3 text-left font-semibold transition hover:bg-zinc-100">Mi perfil</button>}
@@ -591,7 +598,7 @@ export default function HomeFixPage() {
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/45">{authMode === 'login' ? 'Ingreso' : 'Registro'}</p>
                   <h3 className="mt-2 text-3xl font-black tracking-tight">{authMode === 'login' ? 'Entrá a HomeFix' : 'Creá tu cuenta'}</h3>
                 </div>
-                <button onClick={() => setIsAuthOpen(false)} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">✕</button>
+                <button onClick={() => { setIsAuthOpen(false); setAcceptTerms(false); }} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">✕</button>
               </div>
 
               <div className="mb-5 grid grid-cols-2 gap-2 rounded-2xl bg-zinc-100 p-1">
@@ -612,6 +619,27 @@ export default function HomeFixPage() {
                 <input type="email" value={authForm.email} onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })} placeholder="Email" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
                 <input type="password" value={authForm.password} onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })} placeholder="Contraseña" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
                 {authMode === 'register' && <input type="password" value={authForm.confirmPassword} onChange={(e) => setAuthForm({ ...authForm, confirmPassword: e.target.value })} placeholder="Confirmar contraseña" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />}
+                {authMode === 'register' && (
+                  <label className="flex items-start gap-3 rounded-2xl border border-black/10 px-4 py-3 text-sm text-black/75">
+                    <input
+                      type="checkbox"
+                      checked={acceptTerms}
+                      onChange={(e) => setAcceptTerms(e.target.checked)}
+                      className="mt-1"
+                    />
+                    <span>
+                      Acepto los{' '}
+                      <button
+                        type="button"
+                        onClick={() => setShowTerms(true)}
+                        className="underline"
+                      >
+                        términos y condiciones
+                      </button>
+                      .
+                    </span>
+                  </label>
+                )}
                 <button type="submit" className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">{authMode === 'login' ? 'Ingresar' : 'Crear cuenta'}</button>
               </form>
             </div>
@@ -1055,11 +1083,38 @@ export default function HomeFixPage() {
 </section>
 
 
-<footer className="border-t border-black/10">
+      {showTerms && (
+        <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/50 px-4">
+          <div className="max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl md:p-8">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/45">Legal</p>
+                <h3 className="mt-2 text-2xl font-black tracking-tight md:text-3xl">Términos y Condiciones</h3>
+              </div>
+              <button onClick={() => setShowTerms(false)} className="rounded-full border border-black px-3 py-1 text-sm font-semibold">✕</button>
+            </div>
+
+            <div className="space-y-4 text-sm leading-7 text-black/75">
+              <p><strong>Naturaleza del servicio.</strong> HomeFix es una plataforma digital que actúa como intermediaria entre usuarios que buscan servicios y profesionales independientes que los ofrecen. HomeFix no presta directamente los servicios publicados en la plataforma.</p>
+              <p><strong>Relación entre las partes.</strong> La contratación de cualquier servicio se realiza exclusivamente entre el usuario y el profesional. HomeFix no forma parte de dicha relación contractual.</p>
+              <p><strong>Responsabilidad.</strong> HomeFix no se responsabiliza por la calidad, ejecución, resultados, daños, incumplimientos o cualquier inconveniente derivado de los servicios prestados por los profesionales.</p>
+              <p><strong>Profesionales independientes.</strong> Todos los profesionales registrados en la plataforma actúan de manera independiente y no tienen relación laboral, societaria ni de dependencia con HomeFix.</p>
+              <p><strong>Verificación y contenido.</strong> HomeFix puede mostrar información, valoraciones o perfiles de profesionales, pero no garantiza la veracidad absoluta de dicha información.</p>
+              <p><strong>Uso de la plataforma.</strong> Los usuarios se comprometen a utilizar la plataforma de manera responsable y conforme a la legislación vigente.</p>
+              <p><strong>Limitación de responsabilidad.</strong> En ningún caso HomeFix será responsable por daños directos o indirectos derivados del uso de la plataforma o de los servicios contratados a través de ella.</p>
+              <p><strong>Contacto y soporte.</strong> HomeFix podrá facilitar canales de contacto, pero no interviene en disputas entre usuarios y profesionales.</p>
+              <p><strong>Modificaciones.</strong> HomeFix se reserva el derecho de modificar estos términos en cualquier momento.</p>
+              <p className="rounded-2xl border border-black/10 bg-zinc-50 px-4 py-3"><strong>Importante:</strong> al utilizar HomeFix, el usuario acepta que la plataforma actúa únicamente como intermediaria y que toda contratación es bajo su propia responsabilidad.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <footer className="border-t border-black/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-black/60 sm:px-6 md:flex-row">
           <p>© 2026 HomeFix. Todos los derechos reservados.</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-black">Términos</a>
+            <button onClick={() => setShowTerms(true)} className="hover:text-black">Términos y Condiciones</button>
             <a href="#" className="hover:text-black">Privacidad</a>
             <a href="#" className="hover:text-black">Contacto</a>
           </div>
