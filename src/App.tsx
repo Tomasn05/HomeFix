@@ -671,7 +671,7 @@ export default function HomeFixPage() {
       )}
 
       <header className={`sticky ${isCreatorMode ? 'top-8' : 'top-0'} z-50 border-b border-black/10 bg-[#f6f4ef]/95 backdrop-blur`}>
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
           <div onClick={resetHome} className="flex cursor-pointer items-center gap-3 text-left">
             <div className="flex overflow-hidden rounded-3xl border-2 border-black shadow-lg">
               <div className="flex h-12 w-12 items-center justify-center bg-black text-2xl font-black tracking-tight text-white">H</div>
@@ -679,7 +679,7 @@ export default function HomeFixPage() {
             </div>
             <div className="relative">
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-black tracking-tight">HomeFix</h1>
+                <h1 className="text-lg sm:text-xl font-black tracking-tight">HomeFix</h1>
                 <span
                   onClick={(e) => {
                     e.stopPropagation();
@@ -768,7 +768,7 @@ export default function HomeFixPage() {
       <main>
         {isAuthOpen && (
           <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 px-4">
-            <div className="w-full max-w-md rounded-[2rem] bg-white p-6 shadow-2xl md:p-8">
+            <div className="w-full max-w-md rounded-[2rem] bg-white p-5 shadow-2xl sm:p-6 md:p-8">
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/45">{authMode === 'login' ? 'Ingreso' : 'Registro'}</p>
@@ -784,7 +784,7 @@ export default function HomeFixPage() {
 
               <div className="mb-5">
                 <p className="mb-2 text-sm font-semibold">Tipo de cuenta</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   <button onClick={() => setAuthRole('cliente')} className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${authRole === 'cliente' ? 'border-black bg-black text-white' : 'border-black/15'}`}>Cliente</button>
                   {authMode === 'login' && (
                     <button onClick={() => setAuthRole('profesional')} className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${authRole === 'profesional' ? 'border-black bg-black text-white' : 'border-black/15'}`}>Profesional</button>
@@ -809,7 +809,7 @@ export default function HomeFixPage() {
 
         {selectedProfessional && (
           <section className="mx-auto max-w-7xl px-6 pt-10">
-            <div className="rounded-[2rem] border border-black bg-zinc-50 p-8 md:p-10">
+            <div className="rounded-[2rem] border border-black bg-zinc-50 p-5 sm:p-6 md:p-10">
               <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start gap-5">
                   {selectedProfessional.photoUrl ? (
@@ -908,10 +908,10 @@ export default function HomeFixPage() {
           </section>
         )}
 
-        <section className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 md:grid-cols-2 md:py-24">
+        <section className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 md:py-24">
           <div>
             <span className="mb-6 inline-flex rounded-full border border-black px-4 py-2 text-sm font-semibold">Encontrá ayuda confiable en minutos</span>
-            <h2 className="mb-6 text-5xl font-black leading-none tracking-tight md:text-6xl">Soluciones reales para problemas reales.</h2>
+            <h2 className="mb-6 text-3xl font-black leading-none tracking-tight sm:text-4xl md:text-6xl">Soluciones reales para problemas reales.</h2>
             <p className="mb-8 max-w-xl text-lg leading-relaxed text-black/70">En HomeFix conectamos personas con profesionales confiables para resolver tareas del hogar de forma rápida, clara y segura.</p>
             <div className="flex flex-wrap gap-4">
               <button onClick={() => scrollToSection('servicios')} className="rounded-2xl bg-black px-6 py-4 font-semibold text-white shadow-lg">Buscar servicio</button>
@@ -919,7 +919,7 @@ export default function HomeFixPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="rounded-3xl border border-black bg-black p-6 text-white shadow-sm">
               <p className="text-sm uppercase tracking-[0.2em] text-white/70">Profesionales</p>
               <p className="mt-3 text-4xl font-black">+{totalProfessionals}</p>
@@ -938,7 +938,7 @@ export default function HomeFixPage() {
           </div>
         </section>
 
-        <section id="servicios" className="mx-auto max-w-7xl px-6 py-8 md:py-14">
+        <section id="servicios" className="mx-auto max-w-7xl px-4 py-8 sm:px-6 md:py-14">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Servicios</p>
@@ -947,12 +947,12 @@ export default function HomeFixPage() {
             <p className="hidden max-w-md text-right text-black/60 md:block">Cada categoría muestra profesionales con horarios, zona, calificación y modalidad de precio.</p>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {services.map((service) => (
               <div key={service.name} className="group relative overflow-hidden rounded-3xl border border-black/10 shadow-sm transition hover:-translate-y-1 hover:shadow-xl">
                 <div className="absolute inset-0 bg-cover bg-center transition duration-500 group-hover:scale-105" style={{ backgroundImage: `url(${service.image})` }} />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
-                <div className="relative flex min-h-[280px] flex-col justify-end p-6 text-white">
+                <div className="relative flex min-h-[240px] sm:min-h-[280px] flex-col justify-end p-5 sm:p-6 text-white">
                   <div className="mb-5">
                     <span className="mb-4 inline-flex rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em]">
                       {service.pros} profesionales
@@ -980,8 +980,8 @@ export default function HomeFixPage() {
           </div>
         </section>
 
-        <section id="como-funciona" className="mx-auto max-w-7xl px-6 py-16">
-          <div className="rounded-[2rem] bg-black p-8 text-white md:p-12">
+        <section id="como-funciona" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 md:py-16">
+          <div className="rounded-[2rem] bg-black p-5 text-white sm:p-6 md:p-12">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/60">Cómo funciona</p>
             <h3 className="mb-10 mt-3 text-3xl font-black tracking-tight md:text-4xl">Rápido, claro y con ayuda inteligente</h3>
             <div className="grid gap-6 md:grid-cols-4">
@@ -993,7 +993,7 @@ export default function HomeFixPage() {
           </div>
         </section>
 
-        <section id="profesionales" className="mx-auto max-w-7xl px-6 py-10 md:py-16">
+        <section id="profesionales" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 md:py-16">
           <div className="mb-8">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Categoría seleccionada</p>
             <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{activeService.name} disponibles</h3>
@@ -1013,7 +1013,7 @@ export default function HomeFixPage() {
           </div>
 
           {processedWorkers.length === 0 ? (
-            <div className="rounded-[2rem] border border-dashed border-black/30 bg-zinc-50 p-8 text-center">
+            <div className="rounded-[2rem] border border-dashed border-black/30 bg-zinc-50 p-5 text-center sm:p-8">
               <p className="text-lg font-bold">Todavía no hay profesionales cargados en esta categoría.</p>
               <p className="mt-2 text-black/65">Agregalos desde modo creador y van a aparecer acá automáticamente desde Firebase.</p>
             </div>
@@ -1073,20 +1073,20 @@ export default function HomeFixPage() {
           )}
         </section>
 
-        <section className="mx-auto max-w-7xl px-6 pb-20 pt-6">
+        <section className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6">
           <div className="flex flex-col items-center justify-between gap-8 rounded-[2rem] border border-black p-8 md:flex-row md:p-12">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Para profesionales</p>
               <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Sumate a HomeFix</h3>
               <p className="mt-4 max-w-2xl text-black/70">Mostrá tu perfil, tu disponibilidad y tus calificaciones para llegar a nuevos clientes todos los días.</p>
             </div>
-            <button onClick={() => openWhatsApp(creatorProfile.phone, 'Hola Tomi, quiero ofrecer mis servicios en HomeFix.')} className="whitespace-nowrap rounded-2xl bg-black px-6 py-4 font-semibold text-white shadow-lg">Quiero ofrecer mis servicios</button>
+            <button onClick={() => openWhatsApp(creatorProfile.phone, 'Hola Tomi, quiero ofrecer mis servicios en HomeFix.')} className="w-full sm:w-auto rounded-2xl bg-black px-6 py-4 text-center font-semibold text-white shadow-lg">Quiero ofrecer mis servicios</button>
           </div>
         </section>
 
         {currentUser && (
-          <section ref={profileRef} className="mx-auto max-w-7xl px-6 pb-20 pt-10">
-            <div className="rounded-[2rem] border border-black bg-zinc-50 p-8 md:p-10">
+          <section ref={profileRef} className="mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6">
+            <div className="rounded-[2rem] border border-black bg-zinc-50 p-5 sm:p-6 md:p-10">
               <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex items-start gap-5">
                   {profileForm.photoUrl ? (
@@ -1180,8 +1180,8 @@ export default function HomeFixPage() {
         )}
 
         {isCreatorMode && (
-          <section data-creator-panel className="mx-auto max-w-7xl px-6 py-8">
-            <div className="rounded-[2rem] border-2 border-dashed border-black bg-zinc-50 p-8 md:p-10">
+          <section data-creator-panel className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+            <div className="rounded-[2rem] border-2 border-dashed border-black bg-zinc-50 p-5 sm:p-6 md:p-10">
               <div className="mb-8">
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Panel privado del creador</p>
                 <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Tu perfil de creador</h3>
@@ -1309,9 +1309,9 @@ export default function HomeFixPage() {
           </div>
         </div>
 
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-4 right-4 z-50 sm:bottom-6 sm:right-6">
           {isChatOpen && (
-            <div className="mb-4 w-[340px] rounded-3xl border border-black bg-white p-5 shadow-2xl">
+            <div className="mb-4 w-[calc(100vw-32px)] max-w-[340px] rounded-3xl border border-black bg-white p-4 sm:p-5 shadow-2xl">
               <div className="mb-4 flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Asistente HomeFix</p>
@@ -1368,7 +1368,7 @@ export default function HomeFixPage() {
             </div>
           )}
 
-          <button onClick={() => setIsChatOpen((prev) => !prev)} className="flex items-center gap-3 rounded-full bg-black px-5 py-4 font-semibold text-white shadow-2xl">
+          <button onClick={() => setIsChatOpen((prev) => !prev)} className="flex items-center gap-3 rounded-full bg-black px-4 py-3 sm:px-5 sm:py-4 font-semibold text-white shadow-2xl">
             <span>Asistente HomeFix</span>
           </button>
         </div>
