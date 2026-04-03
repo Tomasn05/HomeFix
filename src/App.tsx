@@ -63,6 +63,7 @@ type CreatorProfile = {
   phone: string;
   city: string;
   bio: string;
+  photoUrl?: string;
   updatedAt?: string;
   updatedBy?: string;
 };
@@ -167,6 +168,7 @@ export default function HomeFixPage() {
     phone: '+54 9 261 000-0000',
     city: 'Mendoza',
     bio: 'Estoy construyendo HomeFix para conectar clientes con profesionales confiables de forma simple y rápida.',
+    photoUrl: '',
   });
   const [showTerms, setShowTerms] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
