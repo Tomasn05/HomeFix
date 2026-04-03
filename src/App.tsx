@@ -998,6 +998,19 @@ export default function HomeFixPage() {
                   </select>
                   <input placeholder="Teléfono (10 dígitos)" value={newWorker.contact} onChange={(e) => setNewWorker({ ...newWorker, contact: e.target.value.replace(/[^0-9]/g, '').slice(0, 10) })} className="mb-2 w-full rounded border p-2" />
                   <input placeholder="Email" value={newWorker.email} onChange={(e) => setNewWorker({ ...newWorker, email: e.target.value })} className="mb-2 w-full rounded border p-2" />
+                  <input
+                    key={newWorkerFileInputKey}
+                    type="file"
+                    accept="image/*"
+                    className="mb-2 w-full rounded border p-2"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onloadend = () => setNewWorker((prev) => ({ ...prev, photoUrl: String(reader.result || '') }));
+                      reader.readAsDataURL(file);
+                    }}
+                  />
                   <textarea placeholder="Sobre este profesional" value={newWorker.about} onChange={(e) => setNewWorker({ ...newWorker, about: e.target.value })} className="mb-2 min-h-[96px] w-full rounded border p-2" />
                   <button onClick={addWorker} className="rounded bg-black px-4 py-2 text-white">Guardar</button>
 
@@ -1025,6 +1038,18 @@ export default function HomeFixPage() {
                             </select>
                             <input value={String(worker.contact || '').replace(/[^0-9]/g, '').slice(-10)} onChange={(e) => updateWorker(worker.id || '', 'contact', e.target.value.replace(/[^0-9]/g, '').slice(0, 10))} className="w-full rounded border p-2" />
                             <input value={worker.email || ''} onChange={(e) => updateWorker(worker.id || '', 'email', e.target.value)} className="w-full rounded border p-2" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="w-full rounded border p-2 md:col-span-2"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onloadend = () => updateWorker(worker.id || '', 'photoUrl', String(reader.result || ''));
+                                reader.readAsDataURL(file);
+                              }}
+                            />
                             <textarea value={worker.about || ''} onChange={(e) => updateWorker(worker.id || '', 'about', e.target.value)} className="min-h-[96px] w-full rounded border p-2 md:col-span-2" />
                             <div className="mt-2 flex items-center justify-between md:col-span-2">
                               <span className="text-sm font-semibold">Disponibilidad</span>
