@@ -41,6 +41,7 @@ type Worker = {
   availability?: string;
   createdAt?: string;
   createdBy?: string;
+  verified?: boolean;
 };
 
 type Review = {
@@ -878,6 +879,11 @@ export default function HomeFixPage() {
                     <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{selectedProfessional.name}</h3>
                     <p className="mt-2 text-lg text-black/70">{selectedProfessional.role}</p>
                     <div className="mt-4 flex flex-wrap gap-3 text-sm">
+                      {selectedProfessional.verified && (
+                        <span className="rounded-full border border-emerald-600 bg-emerald-50 px-4 py-2 font-semibold text-emerald-700">
+                          ✅ Verificado por HomeFix
+                        </span>
+                      )}
                       <span className="rounded-full border border-black px-4 py-2">⭐ {(() => {
                         const reviews = getReviewsForProfessional(selectedProfessional);
                         const avg = reviews.length ? (reviews.reduce((sum, r) => sum + r.stars, 0) / reviews.length).toFixed(1) : selectedProfessional.rating;
@@ -897,8 +903,13 @@ export default function HomeFixPage() {
                 <div className="space-y-6">
                   <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
                     <h4 className="text-xl font-bold">Sobre este profesional</h4>
+                    {selectedProfessional.verified && (
+                      <p className="mt-3 rounded-2xl border border-emerald-600 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+                        Este profesional fue cargado y validado manualmente por HomeFix.
+                      </p>
+                    )}
                     <p className="mt-4 text-black/75">
-                      {selectedProfessional.about || 'Profesional verificado dentro de HomeFix con atención personalizada y coordinación directa con el cliente.'}
+                      {selectedProfessional.about || 'Profesional disponible para coordinar trabajos y responder consultas de forma directa.'}
                     </p>
                   </div>
 
@@ -980,7 +991,21 @@ export default function HomeFixPage() {
                   <h4 className="mb-4 font-bold">Perfil de {creatorProfile.name || 'Creador'}</h4>
                   <input value={creatorProfile.name} onChange={(e) => setCreatorProfile({ ...creatorProfile, name: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Nombre" />
                   <input value={creatorProfile.role} onChange={(e) => setCreatorProfile({ ...creatorProfile, role: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Rol" />
-                  <input value={creatorProfile.email} onChange={(e) => setCreatorProfile({ ...creatorProfile, email: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Email" />
+                  
+<input
+  type="file"
+  accept="image/*"
+  className="w-full rounded border p-2 mb-2"
+  onChange={(e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () =>
+      setCreatorProfile((prev) => ({ ...prev, photoUrl: String(reader.result || '') }));
+    reader.readAsDataURL(file);
+  }}
+/>
+<input value={creatorProfile.email} onChange={(e) => setCreatorProfile({ ...creatorProfile, email: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Email" />
                   <input value={creatorProfile.phone} onChange={(e) => setCreatorProfile({ ...creatorProfile, phone: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="WhatsApp" />
                   <input value={creatorProfile.city} onChange={(e) => setCreatorProfile({ ...creatorProfile, city: e.target.value })} className="mb-2 w-full rounded border p-2" placeholder="Ciudad" />
                   <textarea value={creatorProfile.bio} onChange={(e) => setCreatorProfile({ ...creatorProfile, bio: e.target.value })} className="min-h-[96px] w-full rounded border p-2" placeholder="Descripción" />
@@ -1012,6 +1037,14 @@ export default function HomeFixPage() {
                     }}
                   />
                   <textarea placeholder="Sobre este profesional" value={newWorker.about} onChange={(e) => setNewWorker({ ...newWorker, about: e.target.value })} className="mb-2 min-h-[96px] w-full rounded border p-2" />
+                  <label className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                    <input
+                      type="checkbox"
+                      checked={!!newWorker.verified}
+                      onChange={(e) => setNewWorker({ ...newWorker, verified: e.target.checked })}
+                    />
+                    <span>Verificado por HomeFix</span>
+                  </label>
                   <button onClick={addWorker} className="rounded bg-black px-4 py-2 text-white">Guardar</button>
 
                   <div className="mt-4 space-y-4">
@@ -1051,6 +1084,14 @@ export default function HomeFixPage() {
                               }}
                             />
                             <textarea value={worker.about || ''} onChange={(e) => updateWorker(worker.id || '', 'about', e.target.value)} className="min-h-[96px] w-full rounded border p-2 md:col-span-2" />
+                            <label className="flex items-center gap-2 text-sm font-semibold md:col-span-2">
+                              <input
+                                type="checkbox"
+                                checked={!!worker.verified}
+                                onChange={(e) => updateWorker(worker.id || '', 'verified', e.target.checked)}
+                              />
+                              <span>Verificado por HomeFix</span>
+                            </label>
                             <div className="mt-2 flex items-center justify-between md:col-span-2">
                               <span className="text-sm font-semibold">Disponibilidad</span>
                               <button
