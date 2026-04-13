@@ -117,7 +117,7 @@ const HELP_SUGGESTIONS = [
 ];
 
 const MENDOZA_DEPARTMENTS = [
-  'Gran Mendoza', 'Capital', 'Godoy Cruz', 'Guaymallén', 'Las Heras', 'Luján de Cuyo', 'Maipú',
+  'Todo Mendoza', 'Gran Mendoza', 'Capital', 'Godoy Cruz', 'Guaymallén', 'Las Heras', 'Luján de Cuyo', 'Maipú',
   'Junín', 'Rivadavia', 'San Martín', 'Santa Rosa', 'La Paz', 'Lavalle',
   'Tunuyán', 'Tupungato', 'San Carlos', 'San Rafael', 'General Alvear', 'Malargüe',
 ];
