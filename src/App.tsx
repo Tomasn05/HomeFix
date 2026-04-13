@@ -131,20 +131,16 @@ function initials(name: string) {
 }
 
 function matchesService(role: string, serviceName: string) {
-  const roleText = String(role || '').trim().toLowerCase();
-  const name = String(serviceName || '').trim().toLowerCase();
-
-  const normalize = (value: string) => {
-    if (value === 'plomeria') return 'plomería';
-    if (value === 'electricista') return 'electricidad';
-    if (value === 'gasista') return 'gas';
-    if (value === 'aire') return 'aire acondicionado';
-    if (value === 'carpinteria') return 'carpintería';
-    if (value === 'piletero') return 'pileta';
-    return value;
-  };
-
-  return normalize(roleText) === normalize(name);
+  const roleText = String(role || '').toLowerCase();
+  const name = String(serviceName || '').toLowerCase();
+  if (name === 'plomería') return roleText.includes('plom');
+  if (name === 'electricidad') return roleText.includes('electric');
+  if (name === 'gas') return roleText.includes('gas');
+  if (name === 'aire acondicionado') return roleText.includes('aire');
+  if (name === 'pintura') return roleText.includes('pint');
+  if (name === 'carpintería') return roleText.includes('carp');
+  if (name === 'pileta') return roleText.includes('pile');
+  return false;
 }
 
 function buildWorkerId(pro: Worker) {
@@ -820,56 +816,6 @@ export default function HomeFixPage() {
           )}
         </section>
 
-        {currentUser && (
-          <section ref={profileRef} className="mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6">
-            <div className="rounded-[2rem] border border-black bg-zinc-50 p-8 md:p-10">
-              <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="flex items-start gap-5">
-                  {profileForm.photoUrl ? (
-                    <img src={profileForm.photoUrl} alt={profileForm.name || 'Perfil'} className="h-20 w-20 rounded-3xl border border-black object-cover" />
-                  ) : (
-                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-black text-3xl font-black text-white">
-                      {initials(profileForm.name || currentUser.email || 'U')}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Mi perfil</p>
-                    <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{profileForm.name || 'Usuario HomeFix'}</h3>
-                    <p className="mt-2 text-lg text-black/70">{profileForm.email}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
-                  <h4 className="text-xl font-bold">Editar datos</h4>
-                  <div className="mt-4 grid gap-3">
-                    <input value={profileForm.name} onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} placeholder="Nombre y apellido" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
-                    <input value={profileForm.email} disabled className="w-full rounded-2xl border border-black/15 bg-zinc-100 px-4 py-3 outline-none" />
-                    <input value={profileForm.photoUrl} onChange={(e) => setProfileForm({ ...profileForm, photoUrl: e.target.value })} placeholder="URL de foto de perfil" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
-                    <button onClick={handleProfileSave} className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">Guardar cambios</button>
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
-                  <h4 className="text-xl font-bold">Mis reseñas</h4>
-                  <div className="mt-4 space-y-3">
-                    {myReviews.length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/60">Todavía no hiciste reseñas.</div>
-                    ) : (
-                      myReviews.map((r) => (
-                        <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
-                          <p className="font-semibold">Para: {r.workerName}</p>
-                          <p>{'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}</p>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
         {selectedProfessional && (
           <section id="perfil-profesional" className="mx-auto max-w-7xl px-4 pb-10 sm:px-6">
             <div className="rounded-[2rem] border border-black bg-zinc-50 p-6 sm:p-8 md:p-10">
@@ -983,6 +929,58 @@ export default function HomeFixPage() {
             </div>
           </section>
         )}
+
+        {currentUser && (
+          <section ref={profileRef} className="mx-auto max-w-7xl px-4 pb-20 pt-10 sm:px-6">
+            <div className="rounded-[2rem] border border-black bg-zinc-50 p-8 md:p-10">
+              <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="flex items-start gap-5">
+                  {profileForm.photoUrl ? (
+                    <img src={profileForm.photoUrl} alt={profileForm.name || 'Perfil'} className="h-20 w-20 rounded-3xl border border-black object-cover" />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-black text-3xl font-black text-white">
+                      {initials(profileForm.name || currentUser.email || 'U')}
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-black/50">Mi perfil</p>
+                    <h3 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">{profileForm.name || 'Usuario HomeFix'}</h3>
+                    <p className="mt-2 text-lg text-black/70">{profileForm.email}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+                <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
+                  <h4 className="text-xl font-bold">Editar datos</h4>
+                  <div className="mt-4 grid gap-3">
+                    <input value={profileForm.name} onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })} placeholder="Nombre y apellido" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
+                    <input value={profileForm.email} disabled className="w-full rounded-2xl border border-black/15 bg-zinc-100 px-4 py-3 outline-none" />
+                    <input value={profileForm.photoUrl} onChange={(e) => setProfileForm({ ...profileForm, photoUrl: e.target.value })} placeholder="URL de foto de perfil" className="w-full rounded-2xl border border-black/15 px-4 py-3 outline-none focus:border-black" />
+                    <button onClick={handleProfileSave} className="w-full rounded-2xl bg-black px-4 py-3 font-semibold text-white">Guardar cambios</button>
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-black bg-white p-6 shadow-sm">
+                  <h4 className="text-xl font-bold">Mis reseñas</h4>
+                  <div className="mt-4 space-y-3">
+                    {myReviews.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-black/20 p-4 text-sm text-black/60">Todavía no hiciste reseñas.</div>
+                    ) : (
+                      myReviews.map((r) => (
+                        <div key={r.id} className="rounded-2xl border border-black/10 bg-zinc-50 p-4 text-sm text-black/75">
+                          <p className="font-semibold">Para: {r.workerName}</p>
+                          <p>{'⭐'.repeat(r.stars)}{r.text ? ` ${r.text}` : ''}</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+
 
         {isCreatorMode && (
           <section data-creator-panel className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
