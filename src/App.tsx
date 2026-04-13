@@ -131,16 +131,20 @@ function initials(name: string) {
 }
 
 function matchesService(role: string, serviceName: string) {
-  const roleText = String(role || '').toLowerCase();
-  const name = String(serviceName || '').toLowerCase();
-  if (name === 'plomería') return roleText.includes('plom');
-  if (name === 'electricidad') return roleText.includes('electric');
-  if (name === 'gas') return roleText.includes('gas');
-  if (name === 'aire acondicionado') return roleText.includes('aire');
-  if (name === 'pintura') return roleText.includes('pint');
-  if (name === 'carpintería') return roleText.includes('carp');
-  if (name === 'pileta') return roleText.includes('pile');
-  return false;
+  const roleText = String(role || '').trim().toLowerCase();
+  const serviceText = String(serviceName || '').trim().toLowerCase();
+
+  const normalize = (value: string) => {
+    if (value === 'plomeria') return 'plomería';
+    if (value === 'electricista') return 'electricidad';
+    if (value === 'gasista') return 'gas';
+    if (value === 'aire') return 'aire acondicionado';
+    if (value === 'carpinteria') return 'carpintería';
+    if (value === 'piletero') return 'pileta';
+    return value;
+  };
+
+  return normalize(roleText) === normalize(serviceText);
 }
 
 function buildWorkerId(pro: Worker) {
