@@ -257,13 +257,13 @@ export default function HomeFixPage() {
 
   const getSmartMessage = (pro: Worker, service: string) => {
     const base = `Hola ${pro.name}, te encontré en HomeFix.`;
-    if (service === 'Plomería') return `${base} Tengo una pérdida de agua en casa, ¿podés ayudarme?`;
-    if (service === 'Electricidad') return `${base} Estoy teniendo problemas eléctricos (salta la térmica / cortes).`;
-    if (service === 'Gas') return `${base} Necesito revisar un tema de gas o calefón.`;
-    if (service === 'Aire acondicionado') return `${base} El aire acondicionado no está funcionando bien.`;
-    if (service === 'Pintura') return `${base} Quiero pintar un ambiente de mi casa.`;
-    if (service === 'Carpintería') return `${base} Necesito arreglar o hacer un mueble.`;
-    if (service === 'Pileta') return `${base} Necesito mantenimiento para la pileta.`;
+    if (service === 'Plomería') return `${base} Estoy teniendo un problema...`;
+    if (service === 'Electricidad') return `${base} Estoy teniendo un problema....`;
+    if (service === 'Gas') return `${base} Estoy teniendo un problema....`;
+    if (service === 'Aire acondicionado') return `${base} Estoy teniendo un problema....`;
+    if (service === 'Pintura') return `${base} Estoy teniendo un problema....`;
+    if (service === 'Carpintería') return `${base} Estoy teniendo un problema....`;
+    if (service === 'Pileta') return `${base} Estoy teniendo un problema....`;
     return `${base} Quería consultarte por un trabajo.`;
   };
 
