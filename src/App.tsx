@@ -257,13 +257,13 @@ export default function HomeFixPage() {
 
   const getSmartMessage = (pro: Worker, service: string) => {
     const base = `Hola ${pro.name}, te encontré en HomeFix.`;
-    if (service === 'Plomería') return `${base} Estoy teniendo un problema...`;
-    if (service === 'Electricidad') return `${base} Estoy teniendo un problema....`;
-    if (service === 'Gas') return `${base} Estoy teniendo un problema....`;
-    if (service === 'Aire acondicionado') return `${base} Estoy teniendo un problema....`;
-    if (service === 'Pintura') return `${base} Estoy teniendo un problema....`;
-    if (service === 'Carpintería') return `${base} Estoy teniendo un problema....`;
-    if (service === 'Pileta') return `${base} Estoy teniendo un problema....`;
+    if (service === 'Plomería') return `${base} Necesito...`;
+    if (service === 'Electricidad') return `${base} Necesito...`;
+    if (service === 'Gas') return `${base} Necesito...`;
+    if (service === 'Aire acondicionado') return `${base} Necesito...`;
+    if (service === 'Pintura') return `${base} Necesito...`;
+    if (service === 'Carpintería') return `${base} Necesito...`;
+    if (service === 'Pileta') return `${base} Necesito...`;
     return `${base} Quería consultarte por un trabajo.`;
   };
 
