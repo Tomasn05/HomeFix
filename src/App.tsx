@@ -112,6 +112,7 @@ const SERVICE_CATEGORIES = [
   {
     name: 'Electrodomesticos',
     desc: 'Reparación de lavarropas, heladeras y otros electrodomésticos.',
+    image: "https://images.unsplash.com/photo-1632923565835-6582b54f2105"
   },
 ];
 
