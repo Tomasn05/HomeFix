@@ -107,6 +107,7 @@ const SERVICE_CATEGORIES = [
   {
     name: 'Construccion en Seco',
     desc: 'Durlock, divisiones y cielorrasos en seco.',
+    image: "https://images.unsplash.com/photo-1628744448839-a475cc0e90c3?q=80&w=2070&auto=format&fit=crop"
   },
   {
     name: 'Electrodomesticos',
