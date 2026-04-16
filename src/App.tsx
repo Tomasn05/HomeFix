@@ -107,7 +107,6 @@ const SERVICE_CATEGORIES = [
   {
     name: 'Construccion en Seco',
     desc: 'Durlock, divisiones y cielorrasos en seco.',
-    image: https://neucon.com.ar/images/modelos-index/neucon-modelo-76.jpg
   },
 ];
 
