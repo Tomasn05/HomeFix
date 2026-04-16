@@ -109,7 +109,7 @@ const SERVICE_CATEGORIES = [
     desc: 'Durlock, divisiones y cielorrasos en seco.',
   },
   {
-    name: 'Electrodomesticos,
+    name: 'Electrodomesticos',
     desc: 'Reparación de lavarropas, heladeras y otros electrodomésticos.',
   },
 ];
