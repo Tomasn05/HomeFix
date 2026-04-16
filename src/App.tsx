@@ -108,6 +108,10 @@ const SERVICE_CATEGORIES = [
     name: 'Construccion en Seco',
     desc: 'Durlock, divisiones y cielorrasos en seco.',
   },
+  {
+    name: 'Electrodomesticos,
+    desc: 'Reparación de lavarropas, heladeras y otros electrodomésticos.',
+  },
 ];
 
 const HELP_SUGGESTIONS = [
